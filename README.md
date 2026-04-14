@@ -44,7 +44,7 @@ Este projeto foi desenvolvido utilizando as seguintes tecnologias:
 
 - ### <img align="center" alt="Nodemailer" height="30" width="40" src="https://nodemailer.com/img/nm_logo_200x136.png"> Nodemailer
 
-- ### <img align="center" alt="EJS" height="30" width="40" src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/ejs/ejs-original.svg"> EJS
+- ### <% EJS
 
 
 ## 🛠️ Instalação e Configuração
