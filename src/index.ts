@@ -80,7 +80,8 @@ app.post('/block-user/:id', isAdmin, AdminController.blockUser);
 app.get('/admin-logs', isAdmin, LogController.showLogs);
 app.get('/', ProductController.listAllProducts);
 app.get('/seller-dashboard', isSeller, ProductController.showSellerDashboard);
-app.post('/products', isSeller, ProductController.uploadProductImage, ProductController.createProduct);
+app.get('/product-details/:id', ProductController.getProductDetails);
+app.post('/products', isSeller, ProductController.uploadMultipleProductImages, ProductController.createProduct);
 
 
 app.use(errorHandler);

@@ -1,4 +1,3 @@
-// prisma/seed.ts
 import prisma from '../src/config/prisma';
 import bcrypt from 'bcryptjs';
 import { PersonType } from '../src/enums/PersonType';
@@ -34,17 +33,14 @@ export async function createDefaultAdmin() {
                 }
             });
         });
-
-        console.log('✅ Admin criado com sucesso');
     } else {
-        console.log('ℹ️ Admin já existe');
+        console.log('Admin já existe');
     }
 }
 
-// Executar diretamente se for chamado como script
 createDefaultAdmin()
     .catch((e) => {
-        console.error('❌ Erro ao criar admin:', e);
+        console.error('Erro ao criar admin:', e);
         process.exit(1);
     })
     .finally(async () => {

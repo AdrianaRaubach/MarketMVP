@@ -97,9 +97,15 @@
               <textarea name="description" rows="4" required class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none ring-coral-500 focus:ring"></textarea>
             </label>
             <label class="block md:col-span-2">
-              <span class="mb-1 block text-sm font-medium">Foto principal do produto</span>
-              <input name="image" type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="w-full rounded-xl border border-brand-300 px-4 py-2.5 text-sm outline-none ring-coral-500 file:mr-4 file:rounded-lg file:border-0 file:bg-brand-100 file:px-3 file:py-2 file:font-semibold file:text-brand-800 hover:file:bg-brand-200 focus:ring" />
-              <span class="mt-2 block text-xs text-brand-600">Envie JPG, PNG, WEBP ou GIF com ate 5 MB.</span>
+              <span class="mb-1 block text-sm font-medium">Fotos do produto (máximo 10)</span>
+              <input
+                name="images"
+                type="file"
+                multiple
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                class="w-full rounded-xl border border-brand-300 px-4 py-2.5 text-sm outline-none ring-coral-500 file:mr-4 file:rounded-lg file:border-0 file:bg-brand-100 file:px-3 file:py-2 file:font-semibold file:text-brand-800 hover:file:bg-brand-200 focus:ring"
+              />
+              <span class="mt-2 block text-xs text-brand-600">Envie até 10 imagens (JPG, PNG, WEBP ou GIF) com até 5 MB cada.</span>
             </label>
             <button type="submit" class="rounded-xl bg-brand-900 px-4 py-2.5 font-semibold text-brand-50 hover:bg-brand-800 md:col-span-2">Publicar produto</button>
           </form>
@@ -112,13 +118,13 @@
           <div class="mt-4 overflow-x-auto rounded-2xl border border-brand-200">
             <table class="min-w-full text-left text-sm">
               <thead class="bg-brand-100 text-brand-800">
-                <tr>
-                  <th class="px-4 py-3 font-semibold">Item</th>
-                  <th class="px-4 py-3 font-semibold">Categoria</th>
-                  <th class="px-4 py-3 font-semibold">Estoque</th>
-                  <th class="px-4 py-3 font-semibold">Preço</th>
-                  <th class="px-4 py-3 font-semibold">Status</th>
-                </tr>
+                  <tr>
+                    <th class="px-4 py-3 font-semibold">Item</th>
+                    <th class="px-4 py-3 font-semibold">Categoria</th>
+                    <th class="px-4 py-3 font-semibold">Estoque</th>
+                    <th class="px-4 py-3 font-semibold">Preço</th>
+                    <th class="px-4 py-3 font-semibold">Status</th>
+                  </tr>
               </thead>
               <tbody class="divide-y divide-brand-200 bg-white">
                 <% if (products.length === 0) { %>
@@ -127,7 +133,8 @@
                   </tr>
                 <% } %>
                 <% products.forEach(function(product) { %>
-                  <tr>
+                  <tr class="cursor-pointer hover:bg-brand-50 transition-colors"
+                    onclick="window.location.href='/product-details/<%= product.id %>'">
                     <td class="px-4 py-3">
                       <div class="flex items-center gap-3">
                         <% if (product.imageUrl) { %>

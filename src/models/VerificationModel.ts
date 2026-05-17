@@ -1,4 +1,3 @@
-// src/models/VerificationModel.ts
 import prisma from '../config/prisma';
 
 export async function createVerification(personId: number, code: string, expiresInMinutes: number = 15) {
@@ -29,7 +28,7 @@ export async function getValidVerification(personId: number, code: string) {
 
 export async function updateVerificationAttempts(id: number, attempts: number) {
     return await prisma.emailVerification.update({
-        where: { id }, // ← CORRIGIDO: passar o id corretamente
+        where: { id },
         data: { attempts }
     });
 }

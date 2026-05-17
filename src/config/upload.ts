@@ -62,6 +62,15 @@ export const productImageUpload = multer({
   },
 });
 
+export const multipleProductImageUpload = multer({
+  storage: uploadDriver === 's3' ? memoryStorage : localStorage,
+  fileFilter: imageFileFilter,
+  limits: {
+    fileSize: maxFileSizeInBytes,
+    files: 10,
+  },
+});
+
 export function getUploadDriver() {
   return uploadDriver;
 }
@@ -78,6 +87,13 @@ export function getLocalProductImageUrl(file: Express.Multer.File) {
   return `/uploads/products/${file.filename}`;
 }
 
+export function getLocalProductImageUrls(files: Express.Multer.File[]) {
+  return files.map(file => ({
+    imageUrl: `/uploads/products/${file.filename}`,
+    imageStorage: 'local' as UploadDriver,
+  }));
+}
+
 export async function removeLocalProductImage(file?: Express.Multer.File) {
   if (uploadDriver !== 'local' || !file?.path) {
     return;
@@ -89,5 +105,15 @@ export async function removeLocalProductImage(file?: Express.Multer.File) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
       console.error('Nao foi possivel remover a imagem local apos falha no cadastro.', error);
     }
+  }
+}
+
+export async function removeLocalProductImages(files?: Express.Multer.File[]) {
+  if (uploadDriver !== 'local' || !files || files.length === 0) {
+    return;
+  }
+
+  for (const file of files) {
+    await removeLocalProductImage(file);
   }
 }

@@ -1,8 +1,6 @@
-// src/models/LogModel.ts
 import prisma from '../config/prisma';
 
 export async function createLog(log: { user_id: number; method: string; endpoint: string; action_summary: string }) {
-    // user_id é obrigatório agora!
     return await prisma.log.create({
         data: {
             user_id: log.user_id,
@@ -14,7 +12,6 @@ export async function createLog(log: { user_id: number; method: string; endpoint
 }
 
 export async function getAllLogs(limit: number = 50, offset: number = 0) {
-    // Busca os logs COM os dados do usuário via SQL cru
     const logs = await prisma.$queryRaw`
         SELECT
             l.*,
