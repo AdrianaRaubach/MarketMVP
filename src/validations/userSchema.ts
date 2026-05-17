@@ -1,15 +1,11 @@
 import { z } from 'zod';
 import { PersonType } from '../enums/PersonType';
-import * as PersonModel from '../models/PersonModel';
 
 export const userSchema = z
     .object({
         first_name: z.string().min(3, 'Nome é obrigatório'),
         last_name: z.string().min(3, 'Sobrenome é obrigatório'),
-        email: z.email('Email inválido').refine(async (email) => {
-            const existingUser = PersonModel.getByEmail(email);
-            return !existingUser;
-        }, 'Este email já está cadastrado'),
+        email: z.string().email('Email inválido'),
         password: z
             .string()
             .min(8, 'A senha deve ter no mínimo 8 caracteres')

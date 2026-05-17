@@ -1,0 +1,84 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./ecommerce.db"
+}
+
+model Person {
+  id              Int                  @id @default(autoincrement())
+  first_name      String
+  last_name       String
+  email           String               @unique
+  cpf             String?              @unique
+  type            String               @default("customer")
+  blocked         Boolean              @default(false)
+  verified_email  Boolean              @default(false)
+  last_login      DateTime?
+  created_at      DateTime             @default(now())
+  updated_at      DateTime             @default(now()) @updatedAt
+
+  user            User?
+  email_verifications EmailVerification[]
+
+  @@map("persons")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  person_id     Int      @unique
+  hash_password String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @default(now()) @updatedAt
+
+  person        Person   @relation(fields: [person_id], references: [id], onDelete: Restrict)
+  products      Product[]
+
+  @@map("users")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  category    String
+  price       Float
+  stock       Int      @default(0)
+  imageUrl    String?
+  imageStorage String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @default(now()) @updatedAt
+
+  seller_id   Int      // Vendedor que criou o produto
+  seller      User     @relation(fields: [seller_id], references: [id], onDelete: Restrict)
+
+  @@map("products")
+}
+
+model EmailVerification {
+  id          Int      @id @default(autoincrement())
+  person_id   Int
+  code        String
+  expires_at  DateTime
+  attempts    Int      @default(0)
+  verified_at DateTime?
+  created_at  DateTime @default(now())
+
+  person      Person   @relation(fields: [person_id], references: [id])
+
+  @@map("email_verifications")
+}
+
+model Log {
+  id             Int      @id @default(autoincrement())
+  user_id        Int
+  method         String
+  endpoint       String
+  action_summary String
+  created_at     DateTime @default(now())
+
+  @@map("logs")
+}

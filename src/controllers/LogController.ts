@@ -8,17 +8,17 @@ export const showLogs = async (req: Request, res: Response) => {
         const limit = 50;
         const offset = (page - 1) * limit;
 
-        const logs = LogModel.getAllLogs(limit, offset);
-        const total = LogModel.getLogsCount();
+        const logs = await LogModel.getAllLogs(limit, offset);
+        const total = await LogModel.getLogsCount();
 
-        const enrichedLogs = logs.map((log) => {
-            const person = log.user_id ? PersonModel.getById(log.user_id) : null;
+        const enrichedLogs = await Promise.all(logs.map(async (log: any) => {
+            const person = log.user_id ? await PersonModel.getById(log.user_id) : null;
             return {
                 ...log,
                 user_name: person ? `${person.first_name} ${person.last_name}` : 'Sistema',
                 user_email: person?.email || 'Não autenticado',
             };
-        });
+        }));
 
         res.render('admin-logs', {
             user: req.session.user,

@@ -3,7 +3,7 @@ import * as PersonModel from '../models/PersonModel';
 
 export const showAdminDashboard = async (req: Request, res: Response) => {
     try {
-        const persons = PersonModel.getAll();
+        const persons = await PersonModel.getAll();
         res.render('admin-dashboard', {
             user: req.session.user,
             persons: persons,
@@ -19,7 +19,7 @@ export const showAdminDashboard = async (req: Request, res: Response) => {
 export const searchUsers = async (req: Request, res: Response) => {
     try {
         const { name } = req.body;
-        const persons = PersonModel.getByName(name);
+        const persons = await PersonModel.getByName(name);
         res.render('admin-dashboard', {
             user: req.session.user,
             persons: persons,
@@ -35,7 +35,7 @@ export const searchUsers = async (req: Request, res: Response) => {
 export const blockUser = async (req: Request, res: Response) => {
     try {
         const userId = parseInt(req.params.id);
-        const person = PersonModel.getById(userId);
+        const person = await PersonModel.getById(userId);
 
         if (!person) {
             return res.status(404).send('Usuário não encontrado');

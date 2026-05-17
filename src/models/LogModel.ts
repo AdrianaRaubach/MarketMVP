@@ -1,35 +1,37 @@
-import db from '../config/db';
+// src/models/LogModel.ts
+import prisma from '../config/prisma';
 
-export interface ActionLog {
-    id: number;
-    user_id: number | null;
-    method: string;
-    endpoint: string;
-    action_summary: string;
-    created_at: string;
+export async function createLog(log: { user_id: number; method: string; endpoint: string; action_summary: string }) {
+    // user_id é obrigatório agora!
+    return await prisma.log.create({
+        data: {
+            user_id: log.user_id,
+            method: log.method,
+            endpoint: log.endpoint,
+            action_summary: log.action_summary
+        }
+    });
 }
 
-export const createLog = (log: Omit<ActionLog, 'id' | 'created_at'>) => {
-    const stmt = db.prepare(`
-        INSERT INTO logs (user_id, method, endpoint, action_summary)
-        VALUES (?, ?, ?, ?)
-    `);
-
-    return stmt.run(log.user_id, log.method, log.endpoint, log.action_summary);
-};
-
-export const getAllLogs = (limit: number = 50, offset: number = 0) => {
-    const stmt = db.prepare(`
-        SELECT l.*, u.hash_password
+export async function getAllLogs(limit: number = 50, offset: number = 0) {
+    // Busca os logs COM os dados do usuário via SQL cru
+    const logs = await prisma.$queryRaw`
+        SELECT
+            l.*,
+            p.id as person_id,
+            p.first_name,
+            p.last_name,
+            p.email
         FROM logs l
-        LEFT JOIN users u ON l.user_id = u.id
+        INNER JOIN users u ON l.user_id = u.id
+        INNER JOIN persons p ON u.person_id = p.id
         ORDER BY l.created_at DESC
-        LIMIT ? OFFSET ?
-    `);
-    return stmt.all(limit, offset) as (ActionLog & { hash_password?: string })[];
-};
+        LIMIT ${limit} OFFSET ${offset}
+    `;
 
-export const getLogsCount = () => {
-    const stmt = db.prepare('SELECT COUNT(*) as total FROM logs');
-    return (stmt.get() as { total: number }).total;
-};
+    return logs;
+}
+
+export async function getLogsCount(): Promise<number> {
+    return await prisma.log.count();
+}

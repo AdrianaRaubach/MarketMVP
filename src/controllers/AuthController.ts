@@ -12,7 +12,7 @@ export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     try {
-        const person = PersonModel.getByEmail(email);
+        const person = await PersonModel.getByEmail(email);
 
         if (!person) {
             return res.status(401).render('login', {
@@ -20,7 +20,7 @@ export const login = async (req: Request, res: Response) => {
             });
         }
 
-        const user = UserModel.getByPersonId(person.id);
+        const user = await UserModel.getByPersonId(person.id);
 
         if (!user) {
             return res.status(401).render('login', {
@@ -31,7 +31,7 @@ export const login = async (req: Request, res: Response) => {
         const isValid = await bcrypt.compare(password, user.hash_password);
 
         if (isValid) {
-            PersonModel.updateLastLogin(person.id);
+            await PersonModel.updateLastLogin(person.id);
             req.session.user = {
                 id: person.id,
                 name: `${person.first_name} ${person.last_name}`,

@@ -31,7 +31,7 @@ export const resendVerification = async (req: Request, res: Response) => {
         return res.status(401).json({ error: 'Sessão inválida' });
     }
 
-    const person = PersonModel.getById(personId);
+    const person = await PersonModel.getById(personId);
 
     if (!person) {
         return res.status(404).json({ error: 'Usuário não encontrado' });
@@ -44,10 +44,12 @@ export const resendVerification = async (req: Request, res: Response) => {
     try {
         const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-        VerificationModel.invalidateOldVerifications(personId);
-        VerificationModel.createVerification(personId, verificationCode, 15);
+        await VerificationModel.invalidateOldVerifications(personId);
+        await VerificationModel.createVerification(personId, verificationCode, 15);
 
         await emailService.sendVerificationEmail(person.email, verificationCode, true);
+
+        return res.status(200).json({ message: 'Código reenviado com sucesso' });
     } catch (error) {
         console.error('Erro ao enviar email:', error);
         res.status(500).json({ error: 'Erro ao enviar email' });
@@ -63,7 +65,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
     }
 
     try {
-        const verification = VerificationModel.getValidVerification(personId, code);
+        const verification = await VerificationModel.getValidVerification(personId, code);
 
         if (!verification) {
             return res.status(400).json({ error: 'Código inválido ou expirado' });
@@ -73,8 +75,8 @@ export const verifyEmail = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Muitas tentativas. Solicite um novo código.' });
         }
 
-        VerificationModel.updateVerificationAttempts(verification.id, verification.attempts + 1);
-        VerificationModel.markAsVerified(personId);
+        await VerificationModel.updateVerificationAttempts(verification.id, verification.attempts + 1);
+        await VerificationModel.markAsVerified(personId);
 
         if (req.session.user) {
             req.session.user.verified_email = true;
@@ -83,7 +85,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
         delete req.session.pendingVerificationPersonId;
 
         if (!req.session.user) {
-            const person = PersonModel.getById(personId);
+            const person = await PersonModel.getById(personId);
             if (person) {
                 req.session.user = {
                     id: person.id,

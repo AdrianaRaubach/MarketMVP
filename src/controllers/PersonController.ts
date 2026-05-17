@@ -36,7 +36,7 @@ export async function create(req: Request, res: Response): Promise<void> {
         const saltRounds = 12;
         const hash_password = await bcrypt.hash(validatedData.password, saltRounds);
 
-        const personId = PersonModel.create(
+        const personId = await PersonModel.create(
             validatedData.first_name,
             validatedData.last_name,
             validatedData.email,
@@ -44,7 +44,7 @@ export async function create(req: Request, res: Response): Promise<void> {
             hash_password
         );
 
-        const person = PersonModel.getById(personId);
+        const person =  await PersonModel.getById(personId);
 
         if (!person) {
             throw new Error('Erro ao criar usuário');

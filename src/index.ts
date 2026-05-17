@@ -28,10 +28,12 @@ import { isAdmin } from './middleware/isAdmin';
 import { isNotBlocked } from './middleware/isNotBloqued';
 import { isVerified } from './middleware/isVerified';
 import { PersonType } from './enums/PersonType';
-import { createDefaultAdmin } from './config/seed';
 import { logRequests } from './middleware/logger';
 import * as LogController from './controllers/LogController';
 import { errorHandler } from './middleware/errorHandler';
+import { isSeller } from './middleware/isSeller';
+import * as ProductController from './controllers/ProductController';
+import path from 'node:path';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -39,6 +41,10 @@ const port = process.env.PORT || 3000;
 app.set('view engine', 'ejs');
 app.set('views', './src/views');
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+
+app.use('/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
 
 app.use(
     session({
@@ -67,17 +73,18 @@ app.get('/check-email', VerificationController.showCheckEmailPage);
 app.post('/resend-verification', VerificationController.resendVerification);
 app.post('/verify-email', VerificationController.verifyEmail);
 
-app.get('/', isNotBlocked, isVerified, PersonController.index);
+// app.get('/', isNotBlocked, isVerified, PersonController.index);
 app.get('/admin-dashboard', isAdmin, AdminController.showAdminDashboard);
 app.post('/admin-dashboard', isAdmin, AdminController.searchUsers);
 app.post('/block-user/:id', isAdmin, AdminController.blockUser);
 app.get('/admin-logs', isAdmin, LogController.showLogs);
+app.get('/', ProductController.listAllProducts);
+app.get('/seller-dashboard', isSeller, ProductController.showSellerDashboard);
+app.post('/products', isSeller, ProductController.uploadProductImage, ProductController.createProduct);
+
 
 app.use(errorHandler);
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
-
-
-createDefaultAdmin();

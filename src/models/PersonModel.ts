@@ -1,5 +1,5 @@
-import db from '../config/db';
-import { PersonType } from '../enums/PersonType';
+import prisma from '../config/prisma';
+import { PersonType } from '../enums/PersonType.js';
 
 export interface Person {
     id: number;
@@ -9,111 +9,97 @@ export interface Person {
     type: PersonType;
     blocked: boolean;
     verified_email: boolean;
-    last_login: string | null;
-    created_at: string;
-    updated_at: string;
+    last_login: Date | null;
+    created_at: Date;
+    updated_at: Date;
 }
 
-function normalizePerson(dbPerson: any): Person {
-    if (!dbPerson) return dbPerson;
-
-    return {
-        ...dbPerson,
-        blocked: dbPerson.blocked === 1,
-        verified_email: dbPerson.verified_email === 1,
-    };
+export async function getAll(): Promise<Person[]> {
+    return await prisma.person.findMany({
+        orderBy: { id: 'asc' }
+    });
 }
 
-function normalizePersons(dbPersons: any[]): Person[] {
-    if (!dbPersons) return [];
-    return dbPersons.map((person) => normalizePerson(person));
+export async function getByName(name: string): Promise<Person[]> {
+    return await prisma.person.findMany({
+        where: {
+            OR: [
+                { first_name: { contains: name } },
+                { last_name: { contains: name } }
+            ]
+        },
+        orderBy: { id: 'asc' }
+    });
 }
 
-export function getAll(): Person[] {
-    const dados = db.prepare('SELECT * FROM persons ORDER BY id').all();
-    return normalizePersons(dados);
+export async function getByEmail(email: string): Promise<Person | undefined> {
+    const person = await prisma.person.findUnique({
+        where: { email }
+    });
+    console.log('getByEmail:', { email, person });
+    return person || undefined;
 }
 
-export function getByName(name: string): Person[] {
-    const dados = db.prepare('SELECT * FROM persons WHERE first_name LIKE ? OR last_name LIKE ? ORDER BY id').all(`%${name}%`, `%${name}%`);
-    return normalizePersons(dados);
+export async function getById(id: number): Promise<Person | undefined> {
+    const person = await prisma.person.findUnique({
+        where: { id }
+    });
+    return person || undefined;
 }
 
-export function getByEmail(email: string): Person | undefined {
-    const person = db.prepare('SELECT * FROM persons WHERE email = ?').get(email);
-    return normalizePerson(person);
-}
-
-export function getById(id: number): Person | undefined {
-    const person = db.prepare('SELECT * FROM persons WHERE id = ?').get(id);
-    return normalizePerson(person);
-}
-
-export function create(
+export async function create(
     first_name: string,
     last_name: string,
     email: string,
     type: PersonType,
     hash_password: string
-): number {
-    const transaction = db.transaction(() => {
-        const stmt = db.prepare(`
-            INSERT INTO persons (first_name, last_name, email, type)
-            VALUES (@first_name, @last_name, @email, @type)
-        `);
-
-        const result = stmt.run({
-            first_name,
-            last_name,
-            email,
-            type,
+): Promise<number> {
+    const result = await prisma.$transaction(async (tx:any) => {
+        const person = await tx.person.create({
+            data: {
+                first_name,
+                last_name,
+                email,
+                type: type.toLowerCase(),
+                verified_email: false
+            }
         });
 
-        const personId = result.lastInsertRowid as number;
-
-        const userStmt = db.prepare(`
-            INSERT INTO users (person_id, hash_password)
-            VALUES (@person_id, @hash_password)
-        `);
-
-        userStmt.run({
-            person_id: personId,
-            hash_password,
+        await tx.user.create({
+            data: {
+                person_id: person.id,
+                hash_password
+            }
         });
 
-        return personId;
+        return person.id;
     });
-
-    return transaction();
+    return result;
 }
 
-export function updateLastLogin(personId: number): void {
-    const stmt = db.prepare(`
-        UPDATE persons
-        SET last_login = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-    `);
-    stmt.run(personId);
+export async function updateLastLogin(personId: number): Promise<void> {
+    await prisma.person.update({
+        where: { id: personId },
+        data: { last_login: new Date() }
+    });
 }
 
-export function updateBlocked(personId: number, blocked: boolean): void {
-    const stmt = db.prepare(
-        'UPDATE persons SET blocked = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
-    );
-    stmt.run(blocked ? 1 : 0, personId);
+export async function updateBlocked(personId: number, blocked: boolean): Promise<void> {
+    await prisma.person.update({
+        where: { id: personId },
+        data: { blocked }
+    });
 }
 
-export function updateVerifiedEmail(personId: number, verified: boolean): void {
-    const stmt = db.prepare(`
-        UPDATE persons
-        SET verified_email = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-    `);
-    stmt.run(verified ? 1 : 0, personId);
+export async function updateVerifiedEmail(personId: number, verified: boolean): Promise<void> {
+    await prisma.person.update({
+        where: { id: personId },
+        data: { verified_email: verified }
+    });
 }
 
-export function getPersonForSession(id: number) {
-    const person = getById(id);
+export async function getPersonForSession(id: number) {
+    const person = await getById(id);
     if (person) {
         return {
             id: person.id,

@@ -12,8 +12,7 @@ function generateActionSummary(req: Request): string {
     if (originalUrl.includes('/verify-email')) return 'Verificação de email';
     if (originalUrl.includes('/resend-verification')) return 'Reenvio de código de verificação';
     if (originalUrl.includes('/block-user')) {
-        const userId = params.id;
-        return `Bloqueio/desbloqueio do usuário ID: ${userId}`;
+        return 'Bloqueio/desbloqueio de usuário';
     }
     if (originalUrl.includes('/admin-dashboard')) return 'Acesso ao painel administrativo';
 
@@ -28,23 +27,24 @@ export const logRequests = (req: Request, res: Response, next: NextFunction) => 
     let actionSummary = generateActionSummary(req);
 
     const logAction = () => {
-        try {
-
-            setImmediate(() => {
-                try {
-                    LogModel.createLog({
-                        user_id: req.session.user?.id || null,
-                        method: req.method,
-                        endpoint: req.originalUrl,
-                        action_summary: actionSummary,
-                    });
-                } catch (logError) {
-                    console.error('Erro ao registrar log:', logError);
-                }
-            });
-        } catch (error) {
-            console.error('Erro ao processar log:', error);
+        if (!req.session?.user?.id) {
+            return;
         }
+
+        setImmediate(() => {
+            try {
+                LogModel.createLog({
+                    user_id: req.session.user!.id,
+                    method: req.method,
+                    endpoint: req.originalUrl,
+                    action_summary: actionSummary,
+                }).catch((logError) => {
+                    console.error('Erro ao registrar log:', logError);
+                });
+            } catch (error) {
+                console.error('Erro ao processar log:', error);
+            }
+        });
     };
 
     logAction();
