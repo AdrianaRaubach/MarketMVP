@@ -24,6 +24,7 @@ import * as PersonController from './controllers/PersonController';
 import * as AuthController from './controllers/AuthController';
 import * as VerificationController from './controllers/VerificationController';
 import * as AdminController from './controllers/AdminController';
+import * as ProfileController from './controllers/ProfileController';
 import { isAdmin } from './middleware/isAdmin';
 import { isNotBlocked } from './middleware/isNotBloqued';
 import { isVerified } from './middleware/isVerified';
@@ -73,15 +74,18 @@ app.get('/check-email', VerificationController.showCheckEmailPage);
 app.post('/resend-verification', VerificationController.resendVerification);
 app.post('/verify-email', VerificationController.verifyEmail);
 
-// app.get('/', isNotBlocked, isVerified, PersonController.index);
 app.get('/admin-dashboard', isAdmin, AdminController.showAdminDashboard);
 app.post('/admin-dashboard', isAdmin, AdminController.searchUsers);
 app.post('/block-user/:id', isAdmin, AdminController.blockUser);
 app.get('/admin-logs', isAdmin, LogController.showLogs);
-app.get('/', ProductController.listAllProducts);
+app.get('/', isNotBlocked, isVerified, ProductController.listAllProducts);
 app.get('/seller-dashboard', isSeller, ProductController.showSellerDashboard);
 app.get('/product-details/:id', ProductController.getProductDetails);
 app.post('/products', isSeller, ProductController.uploadMultipleProductImages, ProductController.createProduct);
+app.get('/profile', ProfileController.showProfile);
+app.post('/profile/update', ProfileController.updateProfile);
+app.post('/profile/address', ProfileController.updateAddress);
+app.post('/profile/change-password', ProfileController.changePassword);
 
 
 app.use(errorHandler);

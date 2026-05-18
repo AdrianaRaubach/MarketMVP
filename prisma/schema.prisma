@@ -13,6 +13,8 @@ model Person {
   last_name       String
   email           String               @unique
   cpf             String?              @unique
+  phone           String?
+  payment_method  String?
   type            String               @default("customer")
   blocked         Boolean              @default(false)
   verified_email  Boolean              @default(false)
@@ -22,6 +24,7 @@ model Person {
 
   user            User?
   email_verifications EmailVerification[]
+  Addresses  Address[]
 
   @@map("persons")
 }
@@ -93,4 +96,22 @@ model Log {
   created_at     DateTime @default(now())
 
   @@map("logs")
+}
+
+
+model Address {
+  id        Int      @id @default(autoincrement())
+  street    String
+  city      String
+  state     String
+  zipCode   String
+  complement String
+  number    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  person_id    Int
+  Person      Person     @relation(fields: [person_id], references: [id])
+
+  @@map("address")
 }

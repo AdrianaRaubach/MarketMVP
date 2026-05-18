@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MarketMVP | Meu Perfil</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              display: ["Space Grotesk", "sans-serif"],
+              body: ["Plus Jakarta Sans", "sans-serif"],
+            },
+            colors: {
+              brand: {
+                50: "#F8F7F2",
+                100: "#EDE8D8",
+                200: "#D9CEAA",
+                300: "#C7B57D",
+                400: "#B99B56",
+                500: "#A8853A",
+                600: "#886B2F",
+                700: "#665024",
+                800: "#43361A",
+                900: "#251E10",
+              },
+              accent: {
+                500: "#0A7D7A",
+                600: "#075F5D",
+              },
+              coral: {
+                500: "#E66A4E",
+                600: "#C85339",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .grid-bg {
+        background-image: radial-gradient(#d9ceaa 0.8px, transparent 0.8px),
+          radial-gradient(#d9ceaa 0.8px, #f8f7f2 0.8px);
+        background-size: 28px 28px;
+        background-position: 0 0, 14px 14px;
+      }
+    </style>
+  </head>
+  <body class="font-body bg-brand-50 text-brand-900">
+    <div class="min-h-screen grid-bg">
+      <header class="border-b border-brand-200/80 bg-white/75 backdrop-blur">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+          <a href="/" class="flex items-center gap-3">
+            <div class="h-9 w-9 rounded-lg bg-gradient-to-br from-coral-500 to-brand-500"></div>
+            <div>
+              <p class="font-display text-xl font-bold tracking-tight">MarketMVP</p>
+              <p class="text-xs text-brand-700">compre, anuncie e gerencie em um só lugar</p>
+            </div>
+          </a>
+          <nav class="hidden items-center gap-5 text-sm font-medium text-brand-800 md:flex">
+            <a href="/seller-dashboard" class="hover:text-accent-600">Painel do vendedor</a>
+            <a href="/admin-dashboard" class="hover:text-accent-600">Painel admin</a>
+          </nav>
+          <div class="flex items-center gap-2">
+            <% if (user) { %>
+              <span class="hidden rounded-full bg-brand-100 px-3 py-1 text-sm font-semibold text-brand-700 md:inline-flex">
+                Olá, <%= user.name %>!
+              </span>
+              <a href="/profile" class="font-semibold rounded-full border border-brand-300 hover:bg-brand-400 px-2 py-1 text-white bg-brand-500">
+                <i class="fa-solid fa-circle-user"></i>
+              </a>
+              <a href="/logout" class="rounded-full border border-brand-300 px-4 py-2 text-sm font-semibold hover:bg-brand-100">Sair</a>
+            <% } else { %>
+              <a href="/login" class="rounded-full border border-brand-300 px-4 py-2 text-sm font-semibold hover:bg-brand-100">Entrar</a>
+              <a href="/signup" class="rounded-full bg-brand-900 px-4 py-2 text-sm font-semibold text-brand-50 hover:bg-brand-800">Criar conta</a>
+            <% } %>
+          </div>
+        </div>
+      </header>
+
+      <main class="mx-auto max-w-4xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+        <section class="rounded-3xl border border-brand-200 bg-white/85 p-6 shadow-sm md:p-8">
+          <div class="flex items-center gap-4 border-b border-brand-200 pb-6">
+            <div class="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-coral-500 to-brand-500 text-white">
+              <i class="fa-solid fa-user text-3xl"></i>
+            </div>
+            <div>
+              <h1 class="font-display text-3xl font-bold"><%= user.name %></h1>
+              <p class="text-brand-600"><%= user.email %></p>
+              <span class="mt-1 inline-flex rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand-700">
+                <% if (user.type === 'admin') { %>
+                  Administrador
+                <% } else if (user.type === 'seller') { %>
+                  Vendedor
+                <% } else { %>
+                  Comprador
+                <% } %>
+              </span>
+            </div>
+          </div>
+
+          <% if (success) { %>
+            <div class="my-4 rounded-xl bg-green-500/10 border border-green-500/30 px-4 py-3 text-sm font-semibold text-green-600">
+              <i class="fa-solid fa-check-circle mr-2"></i><%= success %>
+            </div>
+          <% } %>
+          <% if (error) { %>
+            <div class="my-4 rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm font-semibold text-red-600">
+              <i class="fa-solid fa-exclamation-triangle mr-2"></i><%= error %>
+            </div>
+          <% } %>
+
+          <div class="mt-6">
+            <div class="flex gap-4 border-b border-brand-200">
+              <button onclick="showTab('info')" id="tab-info-btn" class="px-4 py-2 text-sm font-semibold text-accent-600 border-b-2 border-accent-600 transition">
+                <i class="fa-solid fa-user mr-2"></i>Informações
+              </button>
+              <button onclick="showTab('address')" id="tab-address-btn" class="px-4 py-2 text-sm font-semibold text-brand-600 hover:text-accent-600 transition">
+                <i class="fa-solid fa-home mr-2"></i>Endereço
+              </button>
+              <button onclick="showTab('security')" id="tab-security-btn" class="px-4 py-2 text-sm font-semibold text-brand-600 hover:text-accent-600 transition">
+                <i class="fa-solid fa-lock mr-2"></i>Segurança
+              </button>
+              <% if (user.type === 'seller') { %>
+                <button onclick="showTab('products')" id="tab-products-btn" class="px-4 py-2 text-sm font-semibold text-brand-600 hover:text-accent-600 transition">
+                  <i class="fa-solid fa-box mr-2"></i>Meus Produtos
+                </button>
+              <% } %>
+            </div>
+
+            <!-- Tab Informações -->
+            <div id="tab-info" class="mt-6">
+              <form action="/profile/update" method="POST" class="space-y-4">
+                <div class="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-brand-700">Nome</label>
+                    <input type="text" name="first_name" value="<%= user.first_name %>" class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-brand-700">Sobrenome</label>
+                    <input type="text" name="last_name" value="<%= user.last_name %>" class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-brand-700">Email</label>
+                    <input type="email" name="email" value="<%= user.email %>" class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-brand-700">CPF</label>
+                    <input type="text" name="cpf" value="<%= user.cpf %>" class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-brand-700">Telefone</label>
+                    <input type="text" name="phone" value="<%= user.phone %>" class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-brand-700">Forma de pagamento preferencial</label>
+                    <select name="payment_method" id="payment_method" class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500">
+                      <option value="">Selecione uma forma de pagamento</option>
+                      <option value="credit_card" <%= user.payment_method === 'credit_card' ? 'selected' : '' %>>Cartão de Crédito</option>
+                      <option value="debit_card" <%= user.payment_method === 'debit_card' ? 'selected' : '' %>>Cartão de Débito</option>
+                      <option value="bank_transfer" <%= user.payment_method === 'bank_transfer' ? 'selected' : '' %>>Transferência Bancária</option>
+                      <option value="pix" <%= user.payment_method === 'pix' ? 'selected' : '' %>>Pix</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="flex justify-end">
+                  <button type="submit" class="rounded-xl bg-accent-500 px-6 py-2.5 font-semibold text-white hover:bg-accent-600">
+                    Salvar alterações
+                  </button>
+                </div>
+              </form>
+            </div>
+            <!-- Tab Endereço -->
+            <div id="tab-address" class="mt-6 hidden">
+              <form action="/profile/address" method="POST" class="space-y-4">
+                <div class="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-brand-700">CEP</label>
+                    <input onblur="fetchAddress()" type="text" name="zipCode" value="<%= user.address ? user.address.zipCode : '' %>" class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-brand-700">Estado</label>
+                    <input type="text" name="state" value="<%= user.address ? user.address.state : '' %>" class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-brand-700">Cidade</label>
+                    <input type="text" name="city" value="<%= user.address ? user.address.city : '' %>" class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-brand-700">Logradouro</label>
+                    <input type="text" name="street" value="<%= user.address ? user.address.street : '' %>" class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-brand-700">Número</label>
+                    <input type="text" name="number" value="<%= user.address ? user.address.number : '' %>" class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-brand-700">Complemento</label>
+                    <input type="text" name="complement" value="<%= user.address ? user.address.complement : '' %>" class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500" />
+                  </div>
+                </div>
+                <div class="flex justify-end">
+                  <button type="submit" class="rounded-xl bg-accent-500 px-6 py-2.5 font-semibold text-white hover:bg-accent-600">
+                    Salvar endereço
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Tab Segurança -->
+            <div id="tab-security" class="mt-6 hidden">
+              <form action="/profile/change-password" method="POST" class="space-y-4">
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-brand-700">Senha atual</label>
+                  <input type="password" name="current_password" required class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-brand-700">Nova senha</label>
+                  <input type="password" name="new_password" required class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500" />
+                  <p class="mt-1 text-xs text-brand-500">Mínimo de 8 caracteres</p>
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-brand-700">Confirmar nova senha</label>
+                  <input type="password" name="confirm_password" required class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500" />
+                </div>
+                <div class="flex justify-end">
+                  <button type="submit" class="rounded-xl bg-accent-500 px-6 py-2.5 font-semibold text-white hover:bg-accent-600">
+                    Alterar senha
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Tab Meus Produtos (apenas para vendedores) -->
+            <% if (user.type === 'seller') { %>
+              <div id="tab-products" class="mt-6 hidden">
+                <div class="mb-4 flex justify-between items-center">
+                  <h3 class="font-display text-xl font-bold">Seus produtos</h3>
+                  <a href="/seller-dashboard" class="rounded-lg bg-brand-900 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-800">
+                    <i class="fa-solid fa-plus mr-1"></i>Novo produto
+                  </a>
+                </div>
+                <% if (userProducts && userProducts.length > 0) { %>
+                  <div class="space-y-3">
+                    <% for (var i = 0; i < userProducts.length; i++) { %>
+                      <div class="flex items-center gap-4 rounded-xl border border-brand-200 bg-white p-3">
+                        <% if (userProducts[i].imageUrl) { %>
+                          <img src="<%= userProducts[i].imageUrl %>" alt="<%= userProducts[i].name %>" class="h-16 w-16 rounded-lg object-cover" />
+                        <% } else { %>
+                          <div class="flex h-16 w-16 items-center justify-center rounded-lg bg-brand-100 text-xs text-brand-600">Sem foto</div>
+                        <% } %>
+                        <div class="flex-1">
+                          <p class="font-semibold"><%= userProducts[i].name %></p>
+                          <p class="text-sm text-brand-600">R$ <%= userProducts[i].price.toFixed(2).replace('.', ',') %> | Estoque: <%= userProducts[i].stock %></p>
+                        </div>
+                        <a href="/product-details/<%= userProducts[i].id %>" class="rounded-lg border border-brand-300 px-3 py-1.5 text-sm hover:bg-brand-100">
+                          Ver
+                        </a>
+                      </div>
+                    <% } %>
+                  </div>
+                <% } else { %>
+                  <p class="text-center text-brand-600 py-8">Você ainda não tem produtos cadastrados.</p>
+                <% } %>
+              </div>
+            <% } %>
+          </div>
+        </section>
+      </main>
+
+      <footer class="mt-8 border-t border-brand-200/80 bg-white/80">
+        <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-5 text-sm text-brand-700 sm:px-6 lg:px-8">
+          <p>Template conceitual para testar o fluxo de um MVP de marketplace.</p>
+          <div class="flex gap-4">
+            <a href="/cart" class="hover:text-accent-600">Carrinho</a>
+            <a href="/orders" class="hover:text-accent-600">Pedidos</a>
+            <a href="/seller-dashboard" class="hover:text-accent-600">Vendedor</a>
+            <a href="/admin-dashboard" class="hover:text-accent-600">Admin</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      function showTab(tabName) {
+        document.getElementById('tab-info').classList.add('hidden');
+        document.getElementById('tab-address').classList.add('hidden');
+        document.getElementById('tab-security').classList.add('hidden');
+        if (document.getElementById('tab-products')) {
+          document.getElementById('tab-products').classList.add('hidden');
+        }
+
+        document.getElementById('tab-info-btn').classList.remove('text-accent-600', 'border-accent-600');
+        document.getElementById('tab-info-btn').classList.add('text-brand-600');
+        document.getElementById('tab-address-btn').classList.remove('text-accent-600', 'border-accent-600');
+        document.getElementById('tab-address-btn').classList.add('text-brand-600');
+        document.getElementById('tab-security-btn').classList.remove('text-accent-600', 'border-accent-600');
+        document.getElementById('tab-security-btn').classList.add('text-brand-600');
+        if (document.getElementById('tab-products-btn')) {
+          document.getElementById('tab-products-btn').classList.remove('text-accent-600', 'border-accent-600');
+          document.getElementById('tab-products-btn').classList.add('text-brand-600');
+        }
+
+        document.getElementById('tab-' + tabName).classList.remove('hidden');
+        document.getElementById('tab-' + tabName + '-btn').classList.add('text-accent-600', 'border-accent-600');
+        document.getElementById('tab-' + tabName + '-btn').classList.remove('text-brand-600');
+      }
+
+      async function fetchAddress() {
+        const zipCodeInput = document.querySelector('input[name="zipCode"]');
+        const zipCode = zipCodeInput.value.replace(/\D/g, '');
+
+        const existingMsg = document.getElementById('cep-error');
+        if (existingMsg) existingMsg.remove();
+
+        if (zipCode.length !== 8) {
+          if (zipCode.length > 0) {
+            const errorDiv = document.createElement('p');
+            errorDiv.id = 'cep-error';
+            errorDiv.className = 'mt-1 text-sm text-red-600';
+            errorDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation mr-1"></i>CEP deve conter 8 dígitos';
+            zipCodeInput.parentNode.appendChild(errorDiv);
+            zipCodeInput.classList.add('border-red-500');
+            setTimeout(() => {
+              errorDiv.remove();
+              zipCodeInput.classList.remove('border-red-500');
+            }, 3000);
+          }
+          return;
+        }
+
+        const loadingMsg = document.createElement('span');
+        loadingMsg.textContent = '⏳ Buscando...';
+        loadingMsg.className = 'ml-2 text-sm text-brand-500';
+        zipCodeInput.parentNode.appendChild(loadingMsg);
+        zipCodeInput.disabled = true;
+
+        try {
+          const response = await fetch(`https://viacep.com.br/ws/${zipCode}/json/`);
+          const data = await response.json();
+
+          if (data.erro) throw new Error('CEP não encontrado');
+
+          document.querySelector('input[name="street"]').value = data.logradouro || '';
+          document.querySelector('input[name="city"]').value = data.localidade || '';
+          document.querySelector('input[name="state"]').value = data.uf || '';
+
+          const successDiv = document.createElement('p');
+          successDiv.className = 'mt-1 text-sm text-green-600';
+          successDiv.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i>CEP encontrado!';
+          zipCodeInput.parentNode.appendChild(successDiv);
+          setTimeout(() => successDiv.remove(), 2000);
+
+        } catch (error) {
+          const errorDiv = document.createElement('p');
+          errorDiv.className = 'mt-1 text-sm text-red-600';
+          errorDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i>${error.message || 'Erro ao buscar CEP'}`;
+          zipCodeInput.parentNode.appendChild(errorDiv);
+          setTimeout(() => errorDiv.remove(), 3000);
+        } finally {
+          loadingMsg.remove();
+          zipCodeInput.disabled = false;
+        }
+      }
+    </script>
+  </body>
+</html>
