@@ -43,6 +43,7 @@ model User {
   comments      Comment[]
   product_likes ProductLike[]
   comment_likes CommentLike[]
+  logs          Log[]
 
   @@map("users")
 }
@@ -102,6 +103,8 @@ model Log {
   action_summary String
   created_at     DateTime @default(now())
 
+  user           User     @relation(fields: [user_id], references: [id])
+
   @@map("logs")
 }
 
@@ -135,9 +138,24 @@ model Comment {
   user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   likes       CommentLike[]
+  images      CommentImage[]
 
   @@map("comments")
 }
+
+model CommentImage {
+  id          Int      @id @default(autoincrement())
+  imageUrl    String?
+  imageStorage String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @default(now()) @updatedAt
+
+  comment_id  Int
+  comment     Comment  @relation(fields: [comment_id], references: [id], onDelete: Cascade)
+
+  @@map("comment_images")
+}
+
 
 model ProductLike {
   id          Int      @id @default(autoincrement())

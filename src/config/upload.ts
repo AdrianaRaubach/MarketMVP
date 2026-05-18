@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import multer from 'multer';
 
 export type UploadDriver = 'local' | 's3';
@@ -115,5 +116,63 @@ export async function removeLocalProductImages(files?: Express.Multer.File[]) {
 
   for (const file of files) {
     await removeLocalProductImage(file);
+  }
+}
+
+export async function removeLocalCommentImage(file?: Express.Multer.File) {
+  if (uploadDriver !== 'local' || !file?.path) {
+    return;
+  }
+
+  try {
+    await fs.promises.unlink(file.path);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      console.error('Nao foi possivel remover a imagem local apos falha no cadastro.', error);
+    }
+  }
+}
+
+const commentStorage = multer.diskStorage({
+  destination: (_req, _file, callback) => {
+    const commentUploadDir = path.join(uploadRootDir, 'comments');
+    fs.mkdirSync(commentUploadDir, { recursive: true });
+    callback(null, commentUploadDir);
+  },
+  filename: (_req, file, callback) => {
+    const uniqueSuffix = crypto.randomBytes(16).toString('hex');
+    const extension = path.extname(file.originalname);
+    callback(null, `${Date.now()}-${uniqueSuffix}${extension}`);
+  },
+});
+
+export const commentImageUpload = multer({
+  storage: uploadDriver === 's3' ? memoryStorage : commentStorage,
+  fileFilter: imageFileFilter,
+  limits: {
+    fileSize: maxFileSizeInBytes,
+    files: 5,
+  },
+});
+
+export function getLocalCommentImageUrls(files: Express.Multer.File[]) {
+  return files.map(file => ({
+    imageUrl: `/uploads/comments/${file.filename}`,
+    imageStorage: 'local' as UploadDriver,
+  }));
+}
+
+export async function removeLocalCommentImages(files: Express.Multer.File[]) {
+  if (uploadDriver !== 'local' || !files || files.length === 0) {
+    return;
+  }
+  for (const file of files) {
+    try {
+      await fs.promises.unlink(file.path);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        console.error('Erro ao remover imagem:', error);
+      }
+    }
   }
 }

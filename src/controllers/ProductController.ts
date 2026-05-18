@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';
+import * as ProductModel from '../models/ProductModel';
+import * as CommentModel from '../models/CommentModel';
 import { productImageUpload, removeLocalProductImage, getUploadDriverLabel, multipleProductImageUpload, removeLocalProductImages, getLocalProductImageUrls } from '../config/upload';
 import { storeProductImage } from '../services/product-image-storage';
 import { findMatchingProductCategories, isProductCategory, PRODUCT_CATEGORY_OPTIONS, getProductCategoryLabel } from '../constants/product-categories';
@@ -33,31 +35,15 @@ export const uploadMultipleProductImages = (req: Request, res: Response, next: a
 
 export const showSellerDashboard = async (req: Request, res: Response) => {
   try {
+    const user = await prisma.user.findUnique({
+      where: { person_id: req.session.user!.id }
+    });
+
     const where = req.session.user!.type === 'admin'
       ? {}
-      : { seller_id: req.session.user!.id };
+      : { seller_id: user?.id };
 
-    const products = await prisma.product.findMany({
-      where,
-      include: {
-        seller: {
-          include: {
-            person: {
-              select: {
-                first_name: true,
-                last_name: true,
-                email: true
-              }
-            }
-          }
-        },
-        images: {
-          take: 1,
-          orderBy: { created_at: 'asc' }
-        }
-      },
-      orderBy: { created_at: 'desc' }
-    });
+    const products = await ProductModel.getProductsBySeller(where.seller_id || 0);
 
     const adaptedProducts = products.map((product: any) => ({
       ...product,
@@ -91,30 +77,7 @@ export const getProductDetails = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    const product = await prisma.product.findUnique({
-      where: { id: parseInt(id) },
-      include: {
-        seller: {
-          include: {
-            person: {
-              select: {
-                id: true,
-                first_name: true,
-                last_name: true,
-                email: true,
-                phone: true,
-                store_description: true,
-                categories: true
-              }
-            }
-          }
-        },
-        images: {
-          orderBy: { created_at: 'asc' }
-        },
-        likes: true
-      }
-    });
+    const product = await ProductModel.getProductById(parseInt(id));
 
     if (!product) {
       return res.status(404).render('404', { message: 'Produto não encontrado' });
@@ -128,11 +91,13 @@ export const getProductDetails = async (req: Request, res: Response) => {
 
       if (user) {
         const likes = product.likes as any[];
-        userLiked = likes.some((like) => like.user_id === user.id);
+        userLiked = likes?.some((like) => like.user_id === user.id) || false;
       }
     }
 
     const isAvailable = product.stock > 0;
+    const error = req.query.error as string;
+    const success = req.query.success as string;
 
     res.render('product-details', {
       product: {
@@ -145,7 +110,9 @@ export const getProductDetails = async (req: Request, res: Response) => {
       },
       user: req.session.user || null,
       userLiked,
-      totalLikes: (product.likes as any[]).length,
+      totalLikes: (product.likes as any[])?.length || 0,
+      error: error || null,
+      success: success || null,
       getProductCategoryLabel: (category: string) => {
         const option = PRODUCT_CATEGORY_OPTIONS.find(opt => opt.value === category);
         return option ? option.label : category;
@@ -173,9 +140,7 @@ export const toggleLike = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
-    const prismaAny = prisma as any;
-
-    const existingLike = await prismaAny.productLike.findUnique({
+    const existingLike = await prisma.productLike.findUnique({
       where: {
         product_id_user_id: {
           product_id: productId,
@@ -186,7 +151,7 @@ export const toggleLike = async (req: Request, res: Response) => {
 
     let liked;
     if (existingLike) {
-      await prismaAny.productLike.delete({
+      await prisma.productLike.delete({
         where: {
           product_id_user_id: {
             product_id: productId,
@@ -196,7 +161,7 @@ export const toggleLike = async (req: Request, res: Response) => {
       });
       liked = false;
     } else {
-      await prismaAny.productLike.create({
+      await prisma.productLike.create({
         data: {
           product_id: productId,
           user_id: user.id
@@ -205,8 +170,14 @@ export const toggleLike = async (req: Request, res: Response) => {
       liked = true;
     }
 
-    const totalLikes = await prismaAny.productLike.count({
+    const totalLikes = await prisma.productLike.count({
       where: { product_id: productId }
+    });
+    await LogModel.createLog({
+      user_id: req.session.user!.id,
+      method: 'POST',
+      endpoint: '/product-details/:id/like',
+      action_summary: `Curtiu produto: ${productId}`
     });
 
     res.json({ liked, totalLikes });
@@ -236,22 +207,19 @@ export const createProduct = async (req: Request, res: Response) => {
   }
 
   try {
-    const product = await prisma.product.create({
-      data: {
-        name,
-        description,
-        category,
-        price,
-        stock,
-        seller_id: req.session.user!.id,
-      }
+    const product = await ProductModel.createProduct({
+      name,
+      description,
+      category,
+      price,
+      stock,
+      seller_id: req.session.user!.id,
     });
 
     const files = req.files as Express.Multer.File[];
 
     if (files && files.length > 0) {
       const images = getLocalProductImageUrls(files);
-
       for (const img of images) {
         await prisma.productImage.create({
           data: {
@@ -296,35 +264,22 @@ export const listAllProducts = async (req: Request, res: Response) => {
   const selectedCategory = isProductCategory(category) ? category : '';
   const matchingCategories = findMatchingProductCategories(search);
 
-  const products = await prisma.product.findMany({
-    where: {
-      ...(selectedCategory ? { category: selectedCategory } : {}),
-      ...(search ? {
-        OR: [
-          { name: { contains: search } },
-          { description: { contains: search } },
-          ...(matchingCategories.length > 0 ? [{ category: { in: matchingCategories } }] : []),
-        ],
-      } : {}),
-    },
-    include: {
-      seller: {
-        include: {
-          person: {
-            select: {
-              first_name: true,
-              last_name: true,
-            }
-          }
-        }
-      },
-      images: {
-        take: 1,
-        orderBy: { created_at: 'asc' }
+  let products = await ProductModel.getAllProducts();
+
+  if (selectedCategory || search) {
+    products = products.filter((product: any) => {
+      let match = true;
+      if (selectedCategory && product.category !== selectedCategory) match = false;
+      if (search) {
+        const searchLower = search.toLowerCase();
+        const nameMatch = product.name.toLowerCase().includes(searchLower);
+        const descMatch = product.description.toLowerCase().includes(searchLower);
+        const catMatch = matchingCategories.includes(product.category);
+        if (!nameMatch && !descMatch && !catMatch) match = false;
       }
-    },
-    orderBy: { created_at: 'desc' },
-  });
+      return match;
+    });
+  }
 
   const adaptedProducts = products.map((product: any) => ({
     ...product,

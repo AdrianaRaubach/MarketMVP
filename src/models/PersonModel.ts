@@ -15,13 +15,14 @@ export interface Person {
 }
 
 export async function getAll(): Promise<Person[]> {
-    return await prisma.person.findMany({
+    const people = await prisma.person.findMany({
         orderBy: { id: 'asc' }
     });
+    return people.map(p => ({ ...p, type: p.type as PersonType }));
 }
 
 export async function getByName(name: string): Promise<Person[]> {
-    return await prisma.person.findMany({
+    const people = await prisma.person.findMany({
         where: {
             OR: [
                 { first_name: { contains: name } },
@@ -30,21 +31,21 @@ export async function getByName(name: string): Promise<Person[]> {
         },
         orderBy: { id: 'asc' }
     });
+    return people.map(p => ({ ...p, type: p.type as PersonType }));
 }
 
 export async function getByEmail(email: string): Promise<Person | undefined> {
     const person = await prisma.person.findUnique({
         where: { email }
     });
-    console.log('getByEmail:', { email, person });
-    return person || undefined;
+    return person ? { ...person, type: person.type as PersonType } : undefined;
 }
 
 export async function getById(id: number): Promise<Person | undefined> {
     const person = await prisma.person.findUnique({
         where: { id }
     });
-    return person || undefined;
+    return person ? { ...person, type: person.type as PersonType } : undefined;
 }
 
 export async function create(

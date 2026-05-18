@@ -41,8 +41,29 @@ export async function createProduct(data: {
     });
 }
 
-export async function getAllProducts() {
+export async function getAllProducts(filters?: {
+    search?: string;
+    category?: string;
+    matchingCategories?: string[];
+}) {
+    const where: any = {};
+
+    if (filters?.category) {
+        where.category = filters.category;
+    }
+
+    if (filters?.search) {
+        const searchLower = filters.search.toLowerCase();
+        where.OR = [
+            { name: { contains: searchLower } },
+            { description: { contains: searchLower } },
+            ...(filters.matchingCategories?.length ?
+                [{ category: { in: filters.matchingCategories } }] : [])
+        ];
+    }
+
     return await prisma.product.findMany({
+        where,
         include: {
             seller: {
                 include: {
@@ -65,6 +86,17 @@ export async function getProductsBySeller(seller_id: number) {
     return await prisma.product.findMany({
         where: { seller_id },
         include: {
+            seller: {
+                include: {
+                    person: {
+                        select: {
+                            first_name: true,
+                            last_name: true,
+                            email: true
+                        }
+                    }
+                }
+            },
             images: true
         },
         orderBy: { created_at: 'desc' }
@@ -77,10 +109,38 @@ export async function getProductById(id: number) {
         include: {
             seller: {
                 include: {
-                    person: true
+                    person: {
+                        select: {
+                            id: true,
+                            first_name: true,
+                            last_name: true,
+                            email: true,
+                            phone: true,
+                            store_description: true,
+                            categories: true,
+                        }
+                    }
                 }
             },
-            images: true
+            images: true,
+            likes: true,
+            comments: {
+                include: {
+                    user: {
+                        include: {
+                            person: {
+                                select: {
+                                    first_name: true,
+                                    last_name: true
+                                }
+                            }
+                        }
+                    },
+                    images: true,
+                    likes: true
+                },
+                orderBy: { created_at: 'desc' }
+            }
         }
     });
 }

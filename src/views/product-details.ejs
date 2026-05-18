@@ -137,6 +137,100 @@
             </div>
           </div>
         </section>
+        <section class="mt-3 rounded-3xl border border-brand-200 bg-white p-6 shadow-sm">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-brand-600">Comentários</h3>
+          <div class="mt-4">
+            <% if (product.comments && product.comments.length > 0) { %>
+              <ul class="divide-y divide-brand-200">
+                <% for (var i = 0; i < product.comments.length; i++) { %>
+                  <% var comment = product.comments[i]; %>
+                  <li class="py-4">
+                    <div class="flex justify-between items-start">
+                      <div class="flex-1">
+                        <p class="font-semibold text-brand-800">
+                          <%= comment.user.person.first_name %> <%= comment.user.person.last_name %>
+                        </p>
+                        <p class="text-sm text-brand-700 mt-1"><%= comment.content %></p>
+
+                        <!-- Imagens do comentário -->
+                        <% if (comment.images && comment.images.length > 0) { %>
+                          <div class="flex gap-2 mt-2 flex-wrap">
+                            <% for (var j = 0; j < comment.images.length; j++) { %>
+                              <% var image = comment.images[j]; %>
+                              <img
+                                src="<%= image.imageUrl %>"
+                                alt="Imagem do comentário"
+                                class="h-20 w-20 rounded-lg object-cover cursor-pointer hover:opacity-80"
+                                onclick="openImageModal('<%= image.imageUrl %>')"
+                              />
+                            <% } %>
+                          </div>
+                        <% } %>
+
+                        <p class="mt-1 text-xs text-brand-500">
+                          <%= new Date(comment.created_at).toLocaleDateString('pt-BR') %>
+                        </p>
+                      </div>
+                      <% if (user && (user.id === comment.user.id || user.type === 'admin')) { %>
+                        <button onclick="deleteComment('<%= comment.id %>')" class="text-red-500 hover:text-red-700 ml-4">
+                          <i class="fa-regular fa-trash-alt"></i>
+                        </button>
+                      <% } %>
+                    </div>
+                  </li>
+                <% } %>
+              </ul>
+            <% } else { %>
+              <p class="text-sm text-brand-700">Nenhum comentário ainda. Seja o primeiro a comentar!</p>
+            <% } %>
+          </div>
+
+          <!-- Formulário de comentário COM imagens -->
+          <form action="/product-details/<%= product.id %>/comment" method="POST" enctype="multipart/form-data" class="mt-6">
+            <div class="mb-4">
+              <label class="mb-1 block text-sm font-medium text-brand-700">Deixe seu comentário</label>
+              <textarea
+                name="content"
+                rows="3"
+                required
+                class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none ring-coral-500 focus:ring"
+                placeholder="Escreva seu comentário aqui..."
+              ></textarea>
+            </div>
+
+            <div class="mb-4">
+              <label class="mb-1 block text-sm font-medium text-brand-700">Imagens do comentário (máximo 5)</label>
+              <input
+                name="comment_images"
+                type="file"
+                multiple
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                class="w-full rounded-xl border border-brand-300 px-4 py-2.5 text-sm outline-none ring-coral-500 file:mr-4 file:rounded-lg file:border-0 file:bg-brand-100 file:px-3 file:py-2 file:font-semibold file:text-brand-800 hover:file:bg-brand-200 focus:ring"
+              />
+              <span class="mt-2 block text-xs text-brand-600">Envie até 5 imagens (JPG, PNG, WEBP ou GIF) com até 5 MB cada.</span>
+            </div>
+            <% if (error) { %>
+              <p class="mt-4 rounded-xl border border-coral-500/30 bg-coral-500/10 px-4 py-3 text-sm font-semibold text-coral-600">
+                <i class="fa-solid fa-circle-exclamation mr-2"></i><%= error %>
+              </p>
+            <% } %>
+            <% if (success) { %>
+              <p class="mt-4 rounded-xl border border-accent-500/30 bg-accent-500/10 px-4 py-3 text-sm font-semibold text-accent-600">
+                <i class="fa-solid fa-check-circle mr-2"></i><%= success %>
+              </p>
+            <% } %>
+            <div class="flex justify-end">
+              <button type="submit" class="rounded-xl bg-accent-500 px-6 py-2.5 font-semibold text-white hover:bg-accent-600">
+                Enviar comentário
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50" onclick="closeImageModal()">
+          <img id="modalImage" src="" alt="Imagem ampliada" class="max-w-[90%] max-h-[90%] object-contain rounded-lg" />
+          <button class="absolute top-4 right-4 text-white text-3xl hover:text-gray-300" onclick="closeImageModal()">&times;</button>
+        </div>
       </main>
     </div>
   </body>
@@ -183,7 +277,7 @@
     likeBtn.style.opacity = '0.5';
 
     try {
-      const response = await fetch(`/product/${productId}/like`, {
+      const response = await fetch(`/product-details/${productId}/like`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -209,6 +303,46 @@
     } finally {
       likeBtn.disabled = false;
       likeBtn.style.opacity = '1';
+    }
+  }
+
+  function openImageModal(imageUrl) {
+    const modal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    modalImage.src = imageUrl;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  function closeImageModal() {
+    const modal = document.getElementById('imageModal');
+    modal.classList.remove('flex');
+    modal.classList.add('hidden');
+  }
+
+  async function deleteComment(commentId) {
+    if (!confirm('Tem certeza que deseja excluir este comentário?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/product-details/${commentId}/comment`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        alert(data.error || 'Erro ao deletar comentário');
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao deletar comentário');
     }
   }
 </script>

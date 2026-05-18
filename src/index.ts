@@ -25,6 +25,7 @@ import * as AuthController from './controllers/AuthController';
 import * as VerificationController from './controllers/VerificationController';
 import * as AdminController from './controllers/AdminController';
 import * as ProfileController from './controllers/ProfileController';
+import * as CommentController from './controllers/CommentController';
 import { isAdmin } from './middleware/isAdmin';
 import { isNotBlocked } from './middleware/isNotBloqued';
 import { isVerified } from './middleware/isVerified';
@@ -34,6 +35,7 @@ import * as LogController from './controllers/LogController';
 import { errorHandler } from './middleware/errorHandler';
 import { isSeller } from './middleware/isSeller';
 import * as ProductController from './controllers/ProductController';
+import { commentImageUpload } from './config/upload';
 import path from 'node:path';
 
 const app = express();
@@ -81,13 +83,15 @@ app.get('/admin-logs', isAdmin, LogController.showLogs);
 app.get('/', ProductController.listAllProducts);
 app.get('/seller-dashboard', isSeller, ProductController.showSellerDashboard);
 app.get('/product-details/:id', ProductController.getProductDetails);
+app.post('/product-details/:id/comment', commentImageUpload.array('comment_images', 5), CommentController.addComment);
+app.delete('/product-details/:id/comment', CommentController.deleteComment);
 app.post('/products', isSeller, ProductController.uploadMultipleProductImages, ProductController.createProduct);
 app.get('/profile', ProfileController.showProfile);
 app.get('/profile-seller-public/:id', ProfileController.showProfileSellerPublic);
 app.post('/profile/update', ProfileController.updateProfile);
 app.post('/profile/address', ProfileController.updateAddress);
 app.post('/profile/change-password', ProfileController.changePassword);
-app.post('/product/:id/like', ProductController.toggleLike);
+app.post('/product-details/:id/like', ProductController.toggleLike);
 
 
 app.use(errorHandler);
