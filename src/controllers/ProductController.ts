@@ -111,12 +111,25 @@ export const getProductDetails = async (req: Request, res: Response) => {
         },
         images: {
           orderBy: { created_at: 'asc' }
-        }
+        },
+        likes: true
       }
     });
 
     if (!product) {
       return res.status(404).render('404', { message: 'Produto não encontrado' });
+    }
+
+    let userLiked = false;
+    if (req.session.user) {
+      const user = await prisma.user.findUnique({
+        where: { person_id: req.session.user.id }
+      });
+
+      if (user) {
+        const likes = product.likes as any[];
+        userLiked = likes.some((like) => like.user_id === user.id);
+      }
     }
 
     const isAvailable = product.stock > 0;
@@ -131,6 +144,8 @@ export const getProductDetails = async (req: Request, res: Response) => {
         }
       },
       user: req.session.user || null,
+      userLiked,
+      totalLikes: (product.likes as any[]).length,
       getProductCategoryLabel: (category: string) => {
         const option = PRODUCT_CATEGORY_OPTIONS.find(opt => opt.value === category);
         return option ? option.label : category;
@@ -139,6 +154,65 @@ export const getProductDetails = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Erro ao buscar produto:', error);
     res.status(500).render('500', { error: 'Erro ao carregar produto' });
+  }
+};
+
+export const toggleLike = async (req: Request, res: Response) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'Faça login para curtir produtos' });
+  }
+
+  const productId = parseInt(req.params.id);
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { person_id: req.session.user.id }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    const prismaAny = prisma as any;
+
+    const existingLike = await prismaAny.productLike.findUnique({
+      where: {
+        product_id_user_id: {
+          product_id: productId,
+          user_id: user.id
+        }
+      }
+    });
+
+    let liked;
+    if (existingLike) {
+      await prismaAny.productLike.delete({
+        where: {
+          product_id_user_id: {
+            product_id: productId,
+            user_id: user.id
+          }
+        }
+      });
+      liked = false;
+    } else {
+      await prismaAny.productLike.create({
+        data: {
+          product_id: productId,
+          user_id: user.id
+        }
+      });
+      liked = true;
+    }
+
+    const totalLikes = await prismaAny.productLike.count({
+      where: { product_id: productId }
+    });
+
+    res.json({ liked, totalLikes });
+  } catch (error) {
+    console.error('Erro ao processar like:', error);
+    res.status(500).json({ error: 'Erro ao processar like' });
   }
 };
 

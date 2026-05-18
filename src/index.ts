@@ -87,6 +87,7 @@ app.get('/profile-seller-public/:id', ProfileController.showProfileSellerPublic)
 app.post('/profile/update', ProfileController.updateProfile);
 app.post('/profile/address', ProfileController.updateAddress);
 app.post('/profile/change-password', ProfileController.changePassword);
+app.post('/product/:id/like', ProductController.toggleLike);
 
 
 app.use(errorHandler);

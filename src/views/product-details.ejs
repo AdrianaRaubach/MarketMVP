@@ -39,7 +39,9 @@
       <header class="border-b border-brand-200/80 bg-white/75 backdrop-blur">
         <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <a href="/" class="flex items-center gap-3">
-            <div class="h-9 w-9 rounded-lg bg-gradient-to-br from-coral-500 to-brand-500"></div>
+            <div class="h-9 w-9 rounded-lg bg-gradient-to-br from-coral-500 to-brand-500">
+              <i class="fa-solid fa-cat p-2.5 text-white"></i>
+            </div>
             <div>
               <p class="font-display text-xl font-bold tracking-tight">MarketMVP</p>
               <p class="text-xs text-brand-700">compre, anuncie e gerencie em um só lugar</p>
@@ -98,7 +100,21 @@
             <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">
               <%= getProductCategoryLabel(product.category) %>
             </p>
-            <h1 class="mt-1 font-display text-3xl font-bold"><%= product.name %></h1>
+            <h1 class="mt-1 font-display text-3xl font-bold flex items-center justify-between">
+              <%= product.name %>
+              <button
+                data-product-id="<%= product.id %>"
+                id="like-btn-<%= product.id %>"
+                class="like-btn transition-all duration-200 hover:scale-110 focus:outline-none"
+              >
+                <i id="like-icon-<%= product.id %>" class="fa-<%= userLiked ? 'solid' : 'regular' %> fa-heart text-2xl <%= userLiked ? 'text-red-500' : 'text-gray-400 hover:text-red-400' %>"></i>
+              </button>
+            </h1>
+
+            <!-- Mostrar total de likes -->
+            <p id="likes-count-<%= product.id %>" class="text-sm text-brand-600 mt-1">
+              <i class="fa-regular fa-heart mr-1"></i> <%= totalLikes %> pessoas curtiram este produto
+            </p>
             <p class="mt-2 text-sm text-brand-700">
               <a href="/profile-seller-public/<%= product.seller.person.id %>" class="font-semibold text-brand-600 hover:text-accent-600">
                 Vendedor: <%= product.seller.person.first_name %> <%= product.seller.person.last_name %>
@@ -111,12 +127,12 @@
             <p class="mt-2 text-sm text-brand-600">
               Estoque: <%= product.stock %> unidades
             </p>
+            <p class="mt-2 text-sm text-brand-600">
+              Categoria: <%= product.category %>
+            </p>
             <div class="mt-5 flex flex-wrap gap-3">
               <button class="rounded-xl bg-brand-900 px-5 py-2.5 font-semibold text-brand-50 hover:bg-brand-800">
                 Adicionar ao carrinho
-              </button>
-              <button class="rounded-xl border border-brand-300 px-5 py-2.5 font-semibold hover:bg-brand-100">
-                Salvar item
               </button>
             </div>
           </div>
@@ -142,6 +158,57 @@
     const mainImage = document.querySelector('.flex.h-80 img');
     if (mainImage) {
       mainImage.src = src;
+    }
+  }
+  document.querySelectorAll('.like-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const productId = btn.dataset.productId;
+      toggleLike(productId);
+    });
+  });
+
+  async function toggleLike(productId) {
+    const userId = '<%= user ? user.id : null %>';
+
+    if (!userId) {
+      window.location.href = '/login?error=Faça login para curtir produtos';
+      return;
+    }
+
+    const likeBtn = document.getElementById(`like-btn-${productId}`);
+    const likeIcon = document.getElementById(`like-icon-${productId}`);
+    const likesCount = document.getElementById(`likes-count-${productId}`);
+
+    likeBtn.disabled = true;
+    likeBtn.style.opacity = '0.5';
+
+    try {
+      const response = await fetch(`/product/${productId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        if (data.liked) {
+          likeIcon.className = 'fa-solid fa-heart text-2xl text-red-500';
+        } else {
+          likeIcon.className = 'fa-regular fa-heart text-2xl text-gray-400 hover:text-red-400';
+        }
+
+        likesCount.innerHTML = `<i class="fa-regular fa-heart mr-1"></i> ${data.totalLikes} pessoas curtiram este produto`;
+      } else {
+        alert(data.error || 'Erro ao processar like');
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao processar like');
+    } finally {
+      likeBtn.disabled = false;
+      likeBtn.style.opacity = '1';
     }
   }
 </script>

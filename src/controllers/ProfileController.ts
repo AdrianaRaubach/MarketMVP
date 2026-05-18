@@ -67,7 +67,7 @@ export const showProfileSellerPublic = async (req: Request, res: Response) => {
       seller: userData,
       products: adaptedProducts,
       categoryOptions: OPTIONS,
-      user: req.session.user || null,  // ← Passar o usuário logado
+      user: req.session.user || null,
       getProductCategoryLabel: (category: string) => {
         const option = OPTIONS.find(opt => opt.value === category);
         return option ? option.label : category;
