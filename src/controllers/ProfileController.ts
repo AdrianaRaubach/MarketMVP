@@ -4,6 +4,80 @@ import bcrypt from 'bcryptjs';
 import * as LogModel from '../models/LogModel';
 import { updateProfileSchema, addressSchema, changePasswordSchema } from '../validations/profileSchema';
 import { z } from 'zod';
+import { ProductCategory, parseCategories, stringifyCategories, OPTIONS } from '../constants/product-categories';
+
+export const showProfileSellerPublic = async (req: Request, res: Response) => {
+  try {
+    const sellerId = parseInt(req.params.id);
+
+    const person = await prisma.person.findUnique({
+      where: {
+        id: sellerId,
+        type: 'seller'
+      },
+      include: {
+        user: true,
+        Addresses: true
+      }
+    });
+
+    if (!person) {
+      return res.status(404).render('404', { message: 'Vendedor não encontrado' });
+    }
+
+    const sellerProducts = await prisma.product.findMany({
+      where: { seller_id: person.user?.id },
+      include: {
+        images: { take: 1 },
+        seller: {
+          include: {
+            person: true
+          }
+        }
+      },
+      orderBy: { created_at: 'desc' }
+    });
+
+    const adaptedProducts = sellerProducts.map(product => ({
+      ...product,
+      User: {
+        name: `${person.first_name} ${person.last_name}`
+      },
+      imageUrl: product.images[0]?.imageUrl || null
+    }));
+
+    const categoriesString = (person as any).categories;
+    const sellerCategories = categoriesString ? parseCategories(categoriesString) : [];
+    const mainAddress = person.Addresses?.[0] || null;
+
+    const userData = {
+      id: person.id,
+      name: `${person.first_name} ${person.last_name}`,
+      email: person.email,
+      type: person.type,
+      first_name: person.first_name,
+      last_name: person.last_name,
+      phone: person.phone,
+      store_description: (person as any).store_description || '',
+      categories: sellerCategories,
+      address: mainAddress
+    };
+
+    res.render('profile-seller-public', {
+      seller: userData,
+      products: adaptedProducts,
+      categoryOptions: OPTIONS,
+      user: req.session.user || null,  // ← Passar o usuário logado
+      getProductCategoryLabel: (category: string) => {
+        const option = OPTIONS.find(opt => opt.value === category);
+        return option ? option.label : category;
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao carregar perfil público do vendedor:', error);
+    res.status(500).render('500', { error: 'Erro ao carregar perfil do vendedor' });
+  }
+};
 
 export const showProfile = async (req: Request, res: Response) => {
   if (!req.session.user) {
@@ -24,6 +98,8 @@ export const showProfile = async (req: Request, res: Response) => {
     }
 
     let userProducts: any = [];
+    let sellerCategories: ProductCategory[] = [];
+
     if (person.type === 'seller' && person.user) {
       userProducts = await prisma.product.findMany({
         where: { seller_id: person.user.id },
@@ -31,24 +107,35 @@ export const showProfile = async (req: Request, res: Response) => {
         take: 10,
         orderBy: { created_at: 'desc' }
       });
+
+      const categoriesString = (person as any).categories;
+      sellerCategories = categoriesString ? parseCategories(categoriesString) : [];
     }
 
     const mainAddress = person.Addresses?.[0] || null;
 
+    const userData: any = {
+      id: person.id,
+      name: `${person.first_name} ${person.last_name}`,
+      email: person.email,
+      type: person.type,
+      first_name: person.first_name,
+      last_name: person.last_name,
+      cpf: person.cpf,
+      phone: person.phone,
+      payment_method: person.payment_method,
+      address: mainAddress
+    };
+
+    if (person.type === 'seller') {
+      userData.store_description = (person as any).store_description || '';
+      userData.categories = sellerCategories;
+    }
+
     res.render('profile', {
-      user: {
-        id: person.id,
-        name: `${person.first_name} ${person.last_name}`,
-        email: person.email,
-        type: person.type,
-        first_name: person.first_name,
-        last_name: person.last_name,
-        cpf: person.cpf,
-        phone: person.phone,
-        payment_method: person.payment_method,
-        address: mainAddress
-      },
+      user: userData,
       userProducts,
+      categoryOptions: OPTIONS,
       success: req.query.success,
       error: req.query.error
     });
@@ -65,9 +152,31 @@ export const updateProfile = async (req: Request, res: Response) => {
     const validatedData = updateProfileSchema.parse(req.body);
     const { first_name, last_name, email, cpf, phone, payment_method } = validatedData;
 
+    const updateData: any = {
+      first_name,
+      last_name,
+      email,
+      cpf,
+      phone,
+      payment_method
+    };
+
+    if (req.session.user.type === 'seller') {
+      const { store_description, categories } = req.body;
+
+      if (store_description !== undefined) {
+        updateData.store_description = store_description;
+      }
+
+      if (categories) {
+        const categoriesArray = Array.isArray(categories) ? categories : [categories];
+        updateData.categories = stringifyCategories(categoriesArray);
+      }
+    }
+
     await prisma.person.update({
       where: { id: req.session.user.id },
-      data: { first_name, last_name, email, cpf, phone, payment_method }
+      data: updateData
     });
 
     req.session.user.name = `${first_name} ${last_name}`;

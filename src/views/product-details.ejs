@@ -100,7 +100,9 @@
             </p>
             <h1 class="mt-1 font-display text-3xl font-bold"><%= product.name %></h1>
             <p class="mt-2 text-sm text-brand-700">
-              Vendedor: <%= product.seller.person.first_name %> <%= product.seller.person.last_name %>
+              <a href="/profile-seller-public/<%= product.seller.person.id %>" class="font-semibold text-brand-600 hover:text-accent-600">
+                Vendedor: <%= product.seller.person.first_name %> <%= product.seller.person.last_name %>
+              </a>
             </p>
             <p class="mt-4 text-brand-700"><%= product.description %></p>
             <p class="mt-5 font-display text-4xl font-bold text-coral-600">

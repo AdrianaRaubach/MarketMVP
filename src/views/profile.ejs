@@ -171,8 +171,29 @@
                       <option value="pix" <%= user.payment_method === 'pix' ? 'selected' : '' %>>Pix</option>
                     </select>
                   </div>
+                  <% if (user.type === 'seller') { %>
+                    <div>
+                      <label class="mb-1 block text-sm font-medium text-brand-700">Descrição da loja</label>
+                      <textarea type="text" name="store_description" class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none min-h-[150px] focus:ring-2 focus:ring-accent-500 resize-none"><%= user.store_description %></textarea>
+                    </div>
+                  <% } %>
+
+                  <% if (user.type === 'seller') { %>
+                    <div>
+                      <label class="mb-1 block text-sm font-medium text-brand-700">Categorias que trabalha</label>
+                      <select name="categories" multiple class="w-full rounded-xl border border-brand-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent-500 min-h-[150px]">
+                        <% categoryOptions.forEach(function(category) { %>
+                          <option value="<%= category.value %>" <%= user.categories && user.categories.includes(category.value) ? 'selected' : '' %>>
+                            <%= category.label %>
+                          </option>
+                        <% }) %>
+                      </select>
+                      <p class="mt-1 text-xs text-brand-500">Segure Ctrl (ou Cmd) para selecionar múltiplas categorias</p>
+                    </div>
+                  <% } %>
+
                 </div>
-                <div class="flex justify-end">
+                <div class="flex justify-end mt-4">
                   <button type="submit" class="rounded-xl bg-accent-500 px-6 py-2.5 font-semibold text-white hover:bg-accent-600">
                     Salvar alterações
                   </button>

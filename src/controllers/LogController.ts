@@ -11,7 +11,7 @@ export const showLogs = async (req: Request, res: Response) => {
         const logs = await LogModel.getAllLogs(limit, offset);
         const total = await LogModel.getLogsCount();
 
-        const enrichedLogs = await Promise.all(logs.map(async (log: any) => {
+        const enrichedLogs = await Promise.all((logs as any[]).map(async (log: any) => {
             const person = log.user_id ? await PersonModel.getById(log.user_id) : null;
             return {
                 ...log,

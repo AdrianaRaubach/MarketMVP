@@ -60,3 +60,22 @@ export function findMatchingProductCategories(search: string) {
     })
     .map(({ value }) => value);
 }
+
+export function parseCategories(categoriesJson: string | null): ProductCategory[] {
+  if (!categoriesJson) return [];
+  try {
+    const parsed = JSON.parse(categoriesJson);
+    return parsed.filter((cat: string) =>
+      Object.values(ProductCategory).includes(cat as ProductCategory)
+    );
+  } catch {
+    return [];
+  }
+}
+
+export function stringifyCategories(categories: ProductCategory[]): string {
+  if (!categories || categories.length === 0) return '[]';
+  return JSON.stringify(categories);
+}
+
+export const OPTIONS = PRODUCT_CATEGORY_OPTIONS;

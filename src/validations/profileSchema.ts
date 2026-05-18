@@ -15,7 +15,7 @@ export const updateProfileSchema = z.object({
     .max(11, 'Telefone deve ter no máximo 11 caracteres')
     .optional(),
     payment_method: z.enum([PaymentMethod.CREDIT_CARD, PaymentMethod.DEBIT_CARD, PaymentMethod.BANK_TRANSFER, PaymentMethod.PIX] as const, {
-        error: 'Tipo de pessoa inválido',
+        error: 'Método de pagamento inválido',
     }),
 });
 

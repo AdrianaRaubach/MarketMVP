@@ -98,9 +98,13 @@ export const getProductDetails = async (req: Request, res: Response) => {
           include: {
             person: {
               select: {
+                id: true,
                 first_name: true,
                 last_name: true,
-                email: true
+                email: true,
+                phone: true,
+                store_description: true,
+                categories: true
               }
             }
           }
@@ -115,10 +119,22 @@ export const getProductDetails = async (req: Request, res: Response) => {
       return res.status(404).render('404', { message: 'Produto não encontrado' });
     }
 
+    const isAvailable = product.stock > 0;
+
     res.render('product-details', {
-      product,
-      user: req.session.user,
-      getProductCategoryLabel,
+      product: {
+        ...product,
+        available: isAvailable,
+        seller: {
+          ...product.seller,
+          person: product.seller.person
+        }
+      },
+      user: req.session.user || null,
+      getProductCategoryLabel: (category: string) => {
+        const option = PRODUCT_CATEGORY_OPTIONS.find(opt => opt.value === category);
+        return option ? option.label : category;
+      }
     });
   } catch (error) {
     console.error('Erro ao buscar produto:', error);

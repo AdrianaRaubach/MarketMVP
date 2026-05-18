@@ -16,6 +16,7 @@ model Person {
   phone           String?
   payment_method  String?
   type            String               @default("customer")
+  store_description String?
   blocked         Boolean              @default(false)
   verified_email  Boolean              @default(false)
   last_login      DateTime?
@@ -23,6 +24,7 @@ model Person {
   updated_at      DateTime             @default(now()) @updatedAt
 
   user            User?
+  categories      String?
   email_verifications EmailVerification[]
   Addresses  Address[]
 

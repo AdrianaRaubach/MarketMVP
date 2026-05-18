@@ -15,5 +15,6 @@
     },
     "[ejs]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
-    }
+    },
+    "liveServer.settings.multiRootWorkspaceName": "ecommerce"
 }

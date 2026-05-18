@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MarketMVP | <%= seller.name %> - Perfil do Vendedor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              display: ["Space Grotesk", "sans-serif"],
+              body: ["Plus Jakarta Sans", "sans-serif"],
+            },
+            colors: {
+              brand: {
+                50: "#F8F7F2",
+                100: "#EDE8D8",
+                200: "#D9CEAA",
+                300: "#C7B57D",
+                400: "#B99B56",
+                500: "#A8853A",
+                600: "#886B2F",
+                700: "#665024",
+                800: "#43361A",
+                900: "#251E10",
+              },
+              accent: {
+                500: "#0A7D7A",
+                600: "#075F5D",
+              },
+              coral: {
+                500: "#E66A4E",
+                600: "#C85339",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .grid-bg {
+        background-image: radial-gradient(#d9ceaa 0.8px, transparent 0.8px),
+          radial-gradient(#d9ceaa 0.8px, #f8f7f2 0.8px);
+        background-size: 28px 28px;
+        background-position: 0 0, 14px 14px;
+      }
+    </style>
+  </head>
+  <body class="font-body bg-brand-50 text-brand-900">
+    <div class="min-h-screen grid-bg">
+      <header class="border-b border-brand-200/80 bg-white/75 backdrop-blur">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+          <a href="/" class="flex items-center gap-3">
+            <div class="h-9 w-9 rounded-lg bg-gradient-to-br from-coral-500 to-brand-500"></div>
+            <div>
+              <p class="font-display text-xl font-bold tracking-tight">MarketMVP</p>
+              <p class="text-xs text-brand-700">compre, anuncie e gerencie em um só lugar</p>
+            </div>
+          </a>
+          <nav class="hidden items-center gap-5 text-sm font-medium text-brand-800 md:flex">
+            <a href="/" class="hover:text-accent-600">Início</a>
+            <a href="/seller-dashboard" class="hover:text-accent-600">Painel do vendedor</a>
+            <a href="/admin-dashboard" class="hover:text-accent-600">Painel admin</a>
+          </nav>
+
+          <!-- Header com verificação de usuário logado -->
+          <div class="flex items-center gap-2">
+            <% if (user) { %>
+              <span class="hidden rounded-full bg-brand-100 px-3 py-1 text-sm font-semibold text-brand-700 md:inline-flex">
+                Olá, <%= user.name %>!
+              </span>
+              <a href="/profile" class="font-semibold rounded-full border border-brand-300 hover:bg-brand-100 px-2 py-1 text-brand-600">
+                <i class="fa-solid fa-circle-user"></i>
+              </a>
+              <a href="/logout" class="rounded-full border border-brand-300 px-4 py-2 text-sm font-semibold hover:bg-brand-100">Sair</a>
+            <% } else { %>
+              <a href="/login" class="rounded-full border border-brand-300 px-4 py-2 text-sm font-semibold hover:bg-brand-100">Entrar</a>
+              <a href="/signup" class="rounded-full bg-brand-900 px-4 py-2 text-sm font-semibold text-brand-50 hover:bg-brand-800">Criar conta</a>
+            <% } %>
+          </div>
+        </div>
+      </header>
+
+      <!-- Resto do conteúdo permanece igual -->
+      <main class="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+        <!-- Perfil do Vendedor -->
+        <section class="rounded-3xl border border-brand-200 bg-white/85 p-6 shadow-sm md:p-8">
+          <div class="flex flex-col items-center gap-6 text-center md:flex-row md:text-left">
+            <div class="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-coral-500 to-brand-500 text-white">
+              <i class="fa-solid fa-store text-5xl"></i>
+            </div>
+            <div>
+              <h1 class="font-display text-4xl font-bold"><%= seller.name %></h1>
+              <p class="mt-2 text-brand-600">
+                <i class="fa-solid fa-envelope mr-1"></i> <%= seller.email %>
+              </p>
+              <% if (seller.phone) { %>
+                <p class="mt-1 text-brand-600">
+                  <i class="fa-solid fa-phone mr-1"></i> <%= seller.phone %>
+                </p>
+              <% } %>
+              <span class="mt-3 inline-flex rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand-700">
+                Vendedor
+              </span>
+            </div>
+          </div>
+
+          <!-- Descrição da loja -->
+          <% if (seller.store_description) { %>
+            <div class="mt-6 rounded-xl bg-brand-100 p-4">
+              <h2 class="font-display text-lg font-bold">Sobre a loja</h2>
+              <p class="mt-1 text-brand-700"><%= seller.store_description %></p>
+            </div>
+          <% } %>
+
+          <!-- Categorias que trabalha -->
+          <% if (seller.categories && seller.categories.length > 0) { %>
+            <div class="mt-4">
+              <h2 class="font-display text-lg font-bold">Categorias</h2>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <% seller.categories.forEach(function(cat) { %>
+                  <span class="rounded-full bg-accent-500/10 px-3 py-1 text-xs font-semibold text-accent-600">
+                    <%= categoryOptions.find(c => c.value === cat)?.label || cat %>
+                  </span>
+                <% }) %>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- Endereço -->
+          <% if (seller.address) { %>
+            <div class="mt-4">
+              <h2 class="font-display text-lg font-bold">Endereço</h2>
+              <p class="mt-1 text-brand-700">
+                <%= seller.address.street %>, <%= seller.address.number %><br />
+                <%= seller.address.city %> - <%= seller.address.state %><br />
+                CEP: <%= seller.address.zipCode %>
+              </p>
+            </div>
+          <% } %>
+        </section>
+
+        <!-- Produtos do Vendedor -->
+        <section>
+          <h2 class="font-display text-2xl font-bold">Produtos do vendedor</h2>
+
+          <% if (products.length === 0) { %>
+            <div class="mt-4 rounded-2xl border border-brand-200 bg-white p-6 text-brand-700 shadow-sm">
+              Este vendedor ainda não possui produtos cadastrados.
+            </div>
+          <% } else { %>
+            <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <% products.forEach(function(product) { %>
+                <a href="/product-details/<%= product.id %>" class="group cursor-pointer transition-transform hover:scale-[1.02]">
+                  <article class="rounded-2xl border border-brand-200 bg-white p-4 shadow-sm">
+                    <% if (product.imageUrl) { %>
+                      <img src="<%= product.imageUrl %>" alt="<%= product.name %>" class="mb-4 h-48 w-full rounded-2xl object-cover" />
+                    <% } else { %>
+                      <div class="mb-4 flex h-48 w-full items-center justify-center rounded-2xl bg-brand-100 text-sm font-semibold text-brand-600">Produto sem imagem</div>
+                    <% } %>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">
+                      <%= getProductCategoryLabel(product.category) %>
+                    </p>
+                    <h3 class="mt-1 font-display text-lg font-bold"><%= product.name %></h3>
+                    <p class="mt-1 text-sm text-brand-700 line-clamp-2"><%= product.description %></p>
+                    <div class="mt-3 flex items-center justify-between">
+                      <span class="font-bold text-coral-600">R$ <%= product.price.toFixed(2).replace('.', ',') %></span>
+                      <span class="rounded-lg border border-brand-300 px-3 py-1.5 text-sm font-semibold">Estoque: <%= product.stock %></span>
+                    </div>
+                  </article>
+                </a>
+              <% }) %>
+            </div>
+          <% } %>
+        </section>
+      </main>
+
+      <footer class="mt-8 border-t border-brand-200/80 bg-white/80">
+        <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-5 text-sm text-brand-700 sm:px-6 lg:px-8">
+          <p>Template conceitual para testar o fluxo de um MVP de marketplace.</p>
+          <div class="flex gap-4">
+            <a href="/cart" class="hover:text-accent-600">Carrinho</a>
+            <a href="/orders" class="hover:text-accent-600">Pedidos</a>
+            <a href="/seller-dashboard" class="hover:text-accent-600">Vendedor</a>
+            <a href="/admin-dashboard" class="hover:text-accent-600">Admin</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
