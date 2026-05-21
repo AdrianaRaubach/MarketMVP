@@ -71,27 +71,28 @@ app.post('/login', AuthController.login);
 app.get('/logout', AuthController.logout);
 app.get('/signup', PersonController.showRegisterForm);
 app.post('/signup', PersonController.create);
+app.get('/', ProductController.listAllProducts);
+app.get('/product-details/:id', ProductController.getProductDetails);
+app.get('/profile-seller-public/:id', ProfileController.showProfileSellerPublic);
 
 app.get('/check-email', VerificationController.showCheckEmailPage);
 app.post('/resend-verification', VerificationController.resendVerification);
 app.post('/verify-email', VerificationController.verifyEmail);
 
-app.get('/admin-dashboard', isAdmin, AdminController.showAdminDashboard);
-app.post('/admin-dashboard', isAdmin, AdminController.searchUsers);
-app.post('/block-user/:id', isAdmin, AdminController.blockUser);
-app.get('/admin-logs', isAdmin, LogController.showLogs);
-app.get('/', ProductController.listAllProducts);
-app.get('/seller-dashboard', isSeller, ProductController.showSellerDashboard);
-app.get('/product-details/:id', ProductController.getProductDetails);
-app.post('/product-details/:id/comment', commentImageUpload.array('comment_images', 5), CommentController.addComment);
-app.delete('/product-details/:id/comment', CommentController.deleteComment);
-app.post('/products', isSeller, ProductController.uploadMultipleProductImages, ProductController.createProduct);
-app.get('/profile', ProfileController.showProfile);
-app.get('/profile-seller-public/:id', ProfileController.showProfileSellerPublic);
-app.post('/profile/update', ProfileController.updateProfile);
-app.post('/profile/address', ProfileController.updateAddress);
-app.post('/profile/change-password', ProfileController.changePassword);
-app.post('/product-details/:id/like', ProductController.toggleLike);
+app.get('/admin-dashboard', isAdmin, isNotBlocked, isVerified, AdminController.showAdminDashboard);
+app.post('/admin-dashboard', isAdmin, isNotBlocked, isVerified, AdminController.searchUsers);
+app.post('/block-user/:id', isAdmin, isNotBlocked, isVerified, AdminController.blockUser);
+app.get('/admin-logs', isAdmin, isNotBlocked, isVerified, LogController.showLogs);
+app.get('/seller-dashboard', isSeller, isNotBlocked, isVerified, ProductController.showSellerDashboard);
+app.post('/product-details/:id/comment', isNotBlocked, isVerified, commentImageUpload.array('comment_images', 5), CommentController.addComment);
+app.delete('/product-details/:id/comment', isNotBlocked, isVerified, CommentController.deleteComment);
+app.post('/products', isSeller, isNotBlocked, isVerified, ProductController.uploadMultipleProductImages, ProductController.createProduct);
+app.get('/profile', isNotBlocked, isVerified, ProfileController.showProfile);
+app.post('/profile/update', isNotBlocked, isVerified, ProfileController.updateProfile);
+app.post('/profile/address', isNotBlocked, isVerified, ProfileController.updateAddress);
+app.post('/profile/change-password', isNotBlocked, isVerified, ProfileController.changePassword);
+app.post('/product-details/:id/like', isNotBlocked, isVerified, ProductController.toggleLike);
+app.post('/product-details/commentlike/:id', isNotBlocked, isVerified, CommentController.toggleLike);
 
 
 app.use(errorHandler);

@@ -98,3 +98,66 @@ export const deleteComment = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Erro ao deletar comentário' });
   }
 };
+
+export const toggleLike = async (req: Request, res: Response) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'Faça login para curtir produtos' });
+  }
+
+  const commentId = parseInt(req.params.id);
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { person_id: req.session.user.id }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    const existingLike = await prisma.commentLike.findUnique({
+      where: {
+        comment_id_user_id: {
+          comment_id: commentId,
+          user_id: user.id
+        }
+      }
+    });
+
+    let liked;
+    if (existingLike) {
+      await prisma.commentLike.delete({
+        where: {
+          comment_id_user_id: {
+            comment_id: commentId,
+            user_id: user.id
+          }
+        }
+      });
+      liked = false;
+    } else {
+      await prisma.commentLike.create({
+        data: {
+          comment_id: commentId,
+          user_id: user.id
+        }
+      });
+      liked = true;
+    }
+
+    const totalLikes = await prisma.commentLike.count({
+      where: { comment_id: commentId }
+    });
+    await LogModel.createLog({
+      user_id: req.session.user!.id,
+      method: 'POST',
+      endpoint: '/product-details/commentlike/:id',
+      action_summary: `Curtiu comentário: ${commentId}`
+    });
+
+    res.json({ liked, totalLikes });
+  } catch (error) {
+    console.error('Erro ao processar like:', error);
+    res.status(500).json({ error: 'Erro ao processar like' });
+  }
+};

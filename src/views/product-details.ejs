@@ -144,6 +144,19 @@
               <ul class="divide-y divide-brand-200">
                 <% for (var i = 0; i < product.comments.length; i++) { %>
                   <% var comment = product.comments[i]; %>
+                  <%
+                    // Calcular se o usuário logado curtiu este comentário
+                    var commentUserLiked = false;
+                    if (user && comment.likes) {
+                      for (var k = 0; k < comment.likes.length; k++) {
+                        if (comment.likes[k].user_id === user.id) {
+                          commentUserLiked = true;
+                          break;
+                        }
+                      }
+                    }
+                    var commentTotalLikes = comment.likes ? comment.likes.length : 0;
+                  %>
                   <li class="py-4">
                     <div class="flex justify-between items-start">
                       <div class="flex-1">
@@ -167,11 +180,21 @@
                           </div>
                         <% } %>
 
-                        <p class="mt-1 text-xs text-brand-500">
-                          <%= new Date(comment.created_at).toLocaleDateString('pt-BR') %>
-                        </p>
+                        <div class="flex items-center gap-2 mt-2">
+                          <button
+                            data-comment-id="<%= comment.id %>"
+                            class="comment-like-btn text-sm flex items-center gap-1 hover:text-red-500 transition"
+                            onclick="toggleCommentLike('<%= comment.id %>')"
+                          >
+                            <i id="comment-like-icon-<%= comment.id %>" class="fa-<%= commentUserLiked ? 'solid' : 'regular' %> fa-heart <%= commentUserLiked ? 'text-red-500' : 'text-gray-400' %>"></i>
+                            <span id="comment-likes-count-<%= comment.id %>"><%= commentTotalLikes %></span>
+                          </button>
+                          <span class="text-xs text-brand-500">
+                            <%= new Date(comment.created_at).toLocaleDateString('pt-BR') %>
+                          </span>
+                        </div>
                       </div>
-                      <% if (user && (user.id === comment.user.id || user.type === 'admin')) { %>
+                      <% if (user && (user.id === comment.user.person.id || user.type === 'admin')) { %>
                         <button onclick="deleteComment('<%= comment.id %>')" class="text-red-500 hover:text-red-700 ml-4">
                           <i class="fa-regular fa-trash-alt"></i>
                         </button>
@@ -303,6 +326,59 @@
     } finally {
       likeBtn.disabled = false;
       likeBtn.style.opacity = '1';
+    }
+  }
+
+  document.querySelectorAll('.comment-like-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const productId = btn.dataset.productId;
+      toggleLike(productId);
+    });
+  });
+
+  async function toggleCommentLike(commentId) {
+    const userId = '<%= user ? user.id : null %>';
+
+    if (!userId) {
+      window.location.href = '/login?error=Faça login para curtir comentários';
+      return;
+    }
+
+    const likeIcon = document.getElementById(`comment-like-icon-${commentId}`);
+    const likesCountSpan = document.getElementById(`comment-likes-count-${commentId}`);
+
+    if (!likeIcon) return;
+
+    likeIcon.style.opacity = '0.5';
+
+    try {
+      const response = await fetch(`/product-details/commentlike/${commentId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        if (data.liked) {
+          likeIcon.className = 'fa-solid fa-heart text-red-500';
+        } else {
+          likeIcon.className = 'fa-regular fa-heart text-gray-400';
+        }
+
+        if (likesCountSpan) {
+          likesCountSpan.textContent = data.totalLikes;
+        }
+      } else {
+        alert(data.error || 'Erro ao processar like');
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao processar like');
+    } finally {
+      likeIcon.style.opacity = '1';
     }
   }
 
