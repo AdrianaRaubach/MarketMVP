@@ -41,7 +41,7 @@ export const login = async (req: Request, res: Response) => {
                 verified_email: person.verified_email,
             };
 
-            const redirectTo = req.session.returnTo || '/';
+            const redirectTo = req.session.returnTo || '/auth';
             delete req.session.returnTo;
 
             return res.redirect(redirectTo);

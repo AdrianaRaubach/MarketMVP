@@ -79,6 +79,7 @@ app.get('/check-email', VerificationController.showCheckEmailPage);
 app.post('/resend-verification', VerificationController.resendVerification);
 app.post('/verify-email', VerificationController.verifyEmail);
 
+app.get('/auth', isVerified, isNotBlocked, ProductController.listAllProducts);
 app.get('/admin-dashboard', isAdmin, isNotBlocked, isVerified, AdminController.showAdminDashboard);
 app.post('/admin-dashboard', isAdmin, isNotBlocked, isVerified, AdminController.searchUsers);
 app.post('/block-user/:id', isAdmin, isNotBlocked, isVerified, AdminController.blockUser);
