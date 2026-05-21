@@ -194,7 +194,7 @@
                           </span>
                         </div>
                       </div>
-                      <% if (user && (user.id === comment.user.person.id || user.type === 'admin')) { %>
+                      <% if (user && (user.id === comment.user.id || user.type === 'admin')) { %>
                         <button onclick="deleteComment('<%= comment.id %>')" class="text-red-500 hover:text-red-700 ml-4">
                           <i class="fa-regular fa-trash-alt"></i>
                         </button>
