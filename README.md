@@ -4,26 +4,6 @@
 > Este projeto foi desenvolvido como Atividade avaliada da disciplina Web-2, do Instituto Federal do Rio Grande do Sul.
 
 
----
-
-## 📄 **Requisitos**
-
-- [x] **Criacao de conta:**
-    Formulário com nome, e-mail, senha e tipo de usuário, com validação de e-mail único e senha armazenada de forma segura via hash.
-- [x] **Login:**
-    Autenticação por e-mail e senha com gerenciamento de sessão (cookie) e proteção de rotas para usuários autenticados.
-- [x] **Tipos de usuario:**
-    Três perfis distintos (Admin, Comprador, Vendedor) com restrições de acesso específicas conforme a funcionalidade.
-- [x] **Gestao de usuarios (apenas admin):**
-    Área administrativa para listar usuários, visualizar tipos, desativar perfis e impedir login de usuários inativos.
-- [x] **Validacao de e-mail por senha unica:**
-    Envio de código único por e-mail no cadastro, com validação obrigatória antes da ativação da conta, com expiração e opção de reenvio.
-- [x] **Auditoria de logs de acoes:**
-    Registro em tabela de logs para toda operação (POST, PUT, PATCH, DELETE), contendo data/hora, usuário, método, rota e resumo, com acesso restrito ao admin.
-
-
-
----
 
 ## 💻 **Tecnologias utilizadas**
 
@@ -45,6 +25,9 @@ Este projeto foi desenvolvido utilizando as seguintes tecnologias:
 - ### <img align="center" alt="Nodemailer" height="30" width="40" src="https://nodemailer.com/img/nm_logo_200x136.png"> Nodemailer
 
 - ### <% EJS
+
+- ### <img align="center" alt="Prisma" height="30" width="40"  src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/prisma/prisma-original.svg" /> Prisma
+
 
 
 ## 🛠️ Instalação e Configuração
@@ -75,13 +58,25 @@ SMTP_PASS=
 
 ```
 
-4. Inicie o servidor em modo desenvolvimento
+4. Rode as migrações do prisma
 
 ```bash
-npx npm run dev
+npx npm run migrate
 ```
 
-5. Acesse a aplicação
+5. Crie o usuário ADMIN
+
+```bash
+npx npm run seed
+```
+
+6. Inicie o servidor em modo desenvolvimento
+
+```bash
+npx npm run dev:container
+```
+
+7. Acesse a aplicação
 
 ```bash
 http://localhost:3000
